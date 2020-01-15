@@ -8,17 +8,15 @@
 #include <map>
 
 #include "../pbo/Entry.h"
-
 #include "../StreamUtil.h"
+
+#include <tsl/ordered_map.h>
 
 namespace fs = std::filesystem;
 
 namespace grad_aff {
     class Pbo {
-
-        std::shared_ptr<std::istream> is;
-
-        
+        std::shared_ptr<std::istream> is;  
         std::streampos dataPos = 0;
     public:
         Pbo(std::string filename);
@@ -40,7 +38,8 @@ namespace grad_aff {
         std::vector<uint8_t> getEntryData(fs::path entryPath);
 
         std::string pboName = "";
-        std::vector<Entry> entries = {};
+        //std::vector<Entry> entries = {};
+        tsl::ordered_map<std::string, std::shared_ptr<Entry>> entries = {};
         std::map<std::string, std::string> productEntries = {};
     };
 }

@@ -50,6 +50,8 @@ endif()
 
 find_package(Boost 1.71.0 COMPONENTS system filesystem thread iostreams) 
 
+find_package(tsl-ordered-map CONFIG REQUIRED)
+
 include_directories(${LZO2_INCLUDE_DIR})
 include_directories(${SQUISH_INCLUDE_DIR})
 include_directories(${OIIO_INCLUDE_DIR})
@@ -81,6 +83,7 @@ target_link_libraries(grad_aff PUBLIC ${SQUISH_LIBRARY})
 target_link_libraries(grad_aff PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(grad_aff PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 target_link_libraries(grad_aff PUBLIC taocpp::pegtl)
+target_link_libraries(grad_aff PUBLIC tsl::ordered_map)
 
 # Include sub-projects.
 add_subdirectory ("tests")

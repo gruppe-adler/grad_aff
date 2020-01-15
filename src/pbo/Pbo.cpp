@@ -38,14 +38,14 @@ bool grad_aff::Pbo::readPbo(bool withData, bool checkData) {
 
     // Entry
     while (peekBytes<uint16_t>(*is) != 0) {
-        Entry entry;
-        entry.filename = ba::to_lower_copy(readZeroTerminatedString(*is));
-        entry.packingMethod = readBytes<uint32_t>(*is);
-        entry.orginalSize = readBytes<uint32_t>(*is);
-        entry.reserved = readBytes<uint32_t>(*is);
-        entry.timestamp = readBytes<uint32_t>(*is);
-        entry.dataSize = readBytes<uint32_t>(*is);
-        entries.push_back(entry);
+        auto entry = std::make_shared<Entry>();
+        entry->filename = ba::to_lower_copy(readZeroTerminatedString(*is));
+        entry->packingMethod = readBytes<uint32_t>(*is);
+        entry->orginalSize = readBytes<uint32_t>(*is);
+        entry->reserved = readBytes<uint32_t>(*is);
+        entry->timestamp = readBytes<uint32_t>(*is);
+        entry->dataSize = readBytes<uint32_t>(*is);
+        entries.insert({ entry->filename.string(), entry });
     }
 
     auto nullBytes = readBytes(*is, 21);
@@ -55,7 +55,7 @@ bool grad_aff::Pbo::readPbo(bool withData, bool checkData) {
         return false;
 
     for (auto& entry : entries) {
-        entry.data = readBytes(*is, entry.dataSize);
+        entry.second->data = readBytes(*is, entry.second->dataSize);
     }
 
     if (!checkData)
@@ -92,14 +92,14 @@ void grad_aff::Pbo::extractPbo(fs::path outPath)
     outPath = outPath / pboName;
     for (auto& entry : entries) {
 
-        auto pathWithoutFilename = (outPath / entry.filename).remove_filename();
+        auto pathWithoutFilename = (outPath / entry.second->filename).remove_filename();
 
         if (!fs::exists(pathWithoutFilename)) {
             fs::create_directories(pathWithoutFilename);
         }
 
-        std::ofstream ofs(outPath / entry.filename, std::ios::binary);
-        writeBytes(ofs, entry.data);
+        std::ofstream ofs(outPath / entry.second->filename, std::ios::binary);
+        writeBytes(ofs, entry.second->data);
         ofs.close();
     }
 }
@@ -112,17 +112,17 @@ void grad_aff::Pbo::extractSingleFile(fs::path entryName, fs::path outPath, bool
     }
 
     for (auto& entry : entries) {
-        if (entry.filename == entryName) {
+        if (entry.second->filename == entryName) {
             auto writePath = outPath;
             if (fullPath) {
-                writePath = outPath / pboName/ entry.filename;
+                writePath = outPath / pboName/ entry.second->filename;
             }
             else {
-                writePath = outPath / fs::path(entry.filename).filename();
+                writePath = outPath / fs::path(entry.second->filename).filename();
             }
 
-            if (entry.data.size() == 0) {
-                this->readSingleData(entry.filename);
+            if (entry.second->data.size() == 0) {
+                this->readSingleData(entry.second->filename);
             }
 
             auto pathWithoutFilename = writePath;
@@ -132,7 +132,7 @@ void grad_aff::Pbo::extractSingleFile(fs::path entryName, fs::path outPath, bool
             }
 
             std::ofstream ofs(writePath, std::ios::binary);
-            writeBytes(ofs, entry.data);
+            writeBytes(ofs, entry.second->data);
             ofs.close();
             return;
         }
@@ -150,12 +150,12 @@ void grad_aff::Pbo::readSingleData(fs::path searchEntry) {
     std::streamoff targetDataOffset = 0;
 
     for (auto &entry : entries) {
-        if (entry.filename == searchEntry) {
+        if (entry.second->filename == searchEntry) {
             is->seekg(targetDataOffset, std::ios::cur);
-            entry.data = readBytes(*is, entry.dataSize);
+            entry.second->data = readBytes(*is, entry.second->dataSize);
         }
         else {
-            targetDataOffset += entry.dataSize;
+            targetDataOffset += entry.second->dataSize;
         }
     }
 }
@@ -185,12 +185,12 @@ void grad_aff::Pbo::writePbo(fs::path outPath) {
 
     // Write Header
     for (auto& entry : entries) {
-        writeZeroTerminatedString(ofs, entry.filename.string());
-        writeBytes<uint32_t>(ofs, entry.packingMethod);
-        writeBytes<uint32_t>(ofs, entry.orginalSize);
-        writeBytes<uint32_t>(ofs, entry.reserved);
-        writeBytes<uint32_t>(ofs, entry.timestamp);
-        writeBytes<uint32_t>(ofs, entry.dataSize);
+        writeZeroTerminatedString(ofs, entry.second->filename.string());
+        writeBytes<uint32_t>(ofs, entry.second->packingMethod);
+        writeBytes<uint32_t>(ofs, entry.second->orginalSize);
+        writeBytes<uint32_t>(ofs, entry.second->reserved);
+        writeBytes<uint32_t>(ofs, entry.second->timestamp);
+        writeBytes<uint32_t>(ofs, entry.second->dataSize);
     }
 
     for (int i = 0; i < 21; i++) {
@@ -198,7 +198,7 @@ void grad_aff::Pbo::writePbo(fs::path outPath) {
     }
 
     for (auto& entry : entries) {
-        writeBytes(ofs, entry.data);
+        writeBytes(ofs, entry.second->data);
     }
     writeBytes(ofs, { 0x00 });
     ofs.close();
@@ -238,15 +238,16 @@ std::vector<uint8_t> grad_aff::Pbo::getEntryData(fs::path entryPath) {
         entryPath = (fs::path)ba::to_lower_copy(entryPath.string().substr(productEntries["prefix"].size() + 1));
     }
 
-    for (auto& entry : entries) {
-        if (entry.filename == entryPath) { // || ba::iequals((productEntries["prefix"] / entry.filename).string(), searchEntry)) {
-            if (entry.data.size() == 0) {
-                readSingleData(entry.filename);
-            }
-            return entry.data;
+    auto searchEntry = entries.find(entryPath.string());
+    if (searchEntry != entries.end()) {
+        if (searchEntry->second->data.size() == 0) {
+            readSingleData(searchEntry->second->filename);
         }
+        return searchEntry->second->data;
     }
-    return {};
+    else {
+        return {};
+    }
 }
 
 void grad_aff::Pbo::setPboName(std::string pboName)
