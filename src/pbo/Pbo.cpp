@@ -15,7 +15,7 @@ grad_aff::Pbo::Pbo(std::vector<uint8_t> data, std::string pboName) {
     this->pboName = pboName;
 }
 
-bool grad_aff::Pbo::readPbo(bool withData) {
+bool grad_aff::Pbo::readPbo(bool withData, bool checkData) {
     //std::ifstream ifs(filename, std::ios::binary);
     auto initalZero = readBytes(*is, 1);
     if (initalZero[0] != 0) {
@@ -50,13 +50,16 @@ bool grad_aff::Pbo::readPbo(bool withData) {
 
     auto nullBytes = readBytes(*is, 21);
     dataPos = is->tellg();
-    // TODO: sha1 check should still be possible?
+    
     if (!withData)
         return false;
 
     for (auto& entry : entries) {
         entry.data = readBytes(*is, entry.dataSize);
     }
+
+    if (!checkData)
+        return false;
 
     auto preHashPos = is->tellg();
     is->seekg(0);
@@ -80,8 +83,6 @@ bool grad_aff::Pbo::readPbo(bool withData) {
     if (!SHA1_Final(calculatedHash.data(), &context)) {
         throw std::runtime_error("SHA1 Final failed!");
     }
-
-    //assert(*is.eof());
 
     return (calculatedHash == hash);
 }
