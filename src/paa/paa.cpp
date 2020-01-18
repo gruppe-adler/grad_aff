@@ -1,15 +1,16 @@
 #include "grad_aff/paa/Paa.h"
 
 #include <squish.h>
+#include <lzo/lzo1x.h>
 
+#ifndef GRAD_AFF_LITE_BUILD
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/imagebuf.h>
 #include <OpenImageIO/imagebufalgo.h>
 #include <OpenImageIO/string_view.h>
 
-#include <lzo/lzo1x.h>
-
 using namespace OIIO;
+#endif
 
 grad_aff::Paa::Paa() {
     this->typeOfPax = TypeOfPaX::DXT5;
@@ -142,6 +143,8 @@ void grad_aff::Paa::readPaa() {
     }
 }
 
+#ifndef GRAD_AFF_LITE_BUILD
+
 void grad_aff::Paa::readImage(fs::path filename) {
     auto inImage = ImageBuf(filename.string());
     auto curWidth = inImage.spec().width;
@@ -246,6 +249,8 @@ void grad_aff::Paa::writeImage(std::string filename, int level) {
     
 }
 
+#endif
+
 void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
 
     std::vector<MipMap> encodedMipMaps = mipMaps;
@@ -330,7 +335,7 @@ void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
     std::vector<char> offsetAsChars(4);
     int counter = 0;
 
-    for (auto& const mipmap : encodedMipMaps) {
+    for (auto& mipmap : encodedMipMaps) {
         offsetAsChars = std::vector<char>(reinterpret_cast<char*>(&initalOffset), reinterpret_cast<char*>(&initalOffset) +4);
 
         for (int i = 0; i < 4; i++) {

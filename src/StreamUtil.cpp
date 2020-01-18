@@ -67,8 +67,6 @@ template uint8_t grad_aff::peekBytes<uint8_t>(std::istream& is);
 template uint32_t grad_aff::peekBytes<uint32_t>(std::istream& is);
 // ushort
 template uint16_t grad_aff::peekBytes<uint16_t>(std::istream& is);
-// 24-bit
-template uint32_t grad_aff::peekBytes<uint32_t>(std::istream& is);
 // float
 template float_t grad_aff::peekBytes<float_t>(std::istream& is);
 
@@ -117,7 +115,7 @@ std::pair<std::vector<T>, size_t> grad_aff::readLZOCompressed(std::istream& is, 
 
     for (size_t i = 0; i < bVec.first.size(); i += 4) {
         T f;
-        std::memcpy(&f, &bVec.first.data()[i], sizeof(T));
+        memcpy(&f, &bVec.first.data()[i], sizeof(T));
         retVec.push_back(f);
     }
     return std::make_pair(retVec, bVec.second);

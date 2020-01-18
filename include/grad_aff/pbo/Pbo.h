@@ -23,7 +23,7 @@ namespace grad_aff {
         Pbo(std::vector<uint8_t> data, std::string pboName = "");
         bool readPbo(bool withData = true, bool checkHash = false);
         void extractPbo(fs::path outPath);
-        void Pbo::extractSingleFile(fs::path entryName, fs::path outPath, bool fullPath = true);
+        void extractSingleFile(fs::path entryName, fs::path outPath, bool fullPath = true);
 
         void writePbo(fs::path outPath);
 

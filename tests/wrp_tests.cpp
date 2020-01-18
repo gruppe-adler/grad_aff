@@ -12,10 +12,17 @@ TEST_CASE("empty wrp read", "[empty-wrp--read]") {
     REQUIRE_THROWS_WITH(test_wrp_obj.readWrp(), "Invalid file!");
 }
 
+TEST_CASE("read takis", "[read-takis]") {
+    grad_aff::Wrp test_wrp_obj("takistan.wrp");
+    REQUIRE_NOTHROW(test_wrp_obj.readWrp());
+}
+
 TEST_CASE("read Altis", "[read-altis]") {
     grad_aff::Wrp test_wrp_obj("stratis.wrp");
     REQUIRE_NOTHROW(test_wrp_obj.readWrp());
 }
+
+
 
 TEST_CASE("read Altis in memory", "[read-altis-memory]") {
     std::ifstream ifs("stratis.wrp", std::ios::binary);

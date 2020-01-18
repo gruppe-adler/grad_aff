@@ -5,7 +5,7 @@
 #include "grad_aff/pbo/pbo.h"
 
 TEST_CASE("read layer pbo", "[read-layer-pbo]") {
-    grad_aff::Pbo testPbo("map_altis_data_layers_00_01.pbo");
+    grad_aff::Pbo testPbo("ui_f_enoch.pbo");
     REQUIRE_NOTHROW(testPbo.readPbo());
 }
 
