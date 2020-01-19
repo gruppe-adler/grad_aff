@@ -22,7 +22,6 @@ namespace grad_aff {
         size_t averageBlue = 0;
         size_t averageGreen = 0;
         size_t averageAlpha = 0;
-        bool hasTransparency = false;
 
         std::shared_ptr<std::istream> is;
     public:
@@ -42,6 +41,8 @@ namespace grad_aff {
         Paa(std::string filename);
         Paa(std::vector<uint8_t> data);
         void readPaa();
+
+        bool hasTransparency = false;
 
 #ifndef GRAD_AFF_LITE_BUILD
         void readImage(fs::path filename);
