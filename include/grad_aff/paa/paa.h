@@ -44,10 +44,8 @@ namespace grad_aff {
 
         bool hasTransparency = false;
 
-#ifndef GRAD_AFF_LITE_BUILD
         void readImage(fs::path filename);
         void writeImage(std::string filename, int level = 0);
-#endif
 
         void writePaa(std::string filename, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
         std::vector<MipMap> mipMaps = {};
