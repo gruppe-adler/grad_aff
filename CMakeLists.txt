@@ -7,7 +7,6 @@ project ("grad_aff")
 
 include(ExternalProject)
 option(USE_STATIC_LINKING "Static Build" ON)
-option(GRAD_AFF_LITE_BUILD "Lite Build" OFF)
 
 if(GRAD_AFF_LITE_BUILD)
     add_definitions(-DGRAD_AFF_LITE_BUILD)
@@ -40,11 +39,13 @@ FIND_LIBRARY(LZO2_LIBRARY NAMES lzo2 liblzo2)
 find_path(SQUISH_INCLUDE_DIR squish.h)
 find_library(SQUISH_LIBRARY squish${DEBUG_SUFFIX})
 
-if(NOT GRAD_AFF_LITE_BUILD)
 # Image
-find_package(OpenImageIO CONFIG REQUIRED)
+if(MINGW)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(OIIO_PKG REQUIRED IMPORTED_TARGET OpenImageIO)
+else()
+    find_package(OpenImageIO CONFIG REQUIRED)
 endif()
-
 # Parsing
 find_package(pegtl CONFIG REQUIRED)
 
@@ -63,11 +64,11 @@ find_package(tsl-ordered-map CONFIG REQUIRED)
 
 include_directories(${LZO2_INCLUDE_DIR})
 include_directories(${SQUISH_INCLUDE_DIR})
-
-if(NOT GRAD_AFF_LITE_BUILD)
+if(MINGW)
+    include_directories(${OIIO_PKG_INCLUDE_DIRS}/..)
+else()
     include_directories(${OIIO_INCLUDE_DIR})
 endif()
-
 include_directories(${Boost_INCLUDE_DIRS}) 
 include_directories("include")
 
@@ -91,11 +92,11 @@ endif()
 
 target_include_directories(grad_aff PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(grad_aff PUBLIC ${OPENIMAGEIO_INCLUDE_DIR})
-
-if(NOT GRAD_AFF_LITE_BUILD)
+if(MINGW)
+    target_link_libraries(grad_aff PUBLIC PkgConfig::OIIO_PKG)
+else()
     target_link_libraries(grad_aff PUBLIC OpenImageIO::OpenImageIO OpenImageIO::OpenImageIO_Util)
 endif()
-
 target_link_libraries(grad_aff PUBLIC ${LZO2_LIBRARY})
 target_link_libraries(grad_aff PUBLIC ${SQUISH_LIBRARY})
 target_link_libraries(grad_aff PUBLIC ${Boost_LIBRARIES})

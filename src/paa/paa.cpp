@@ -3,14 +3,13 @@
 #include <squish.h>
 #include <lzo/lzo1x.h>
 
-#ifndef GRAD_AFF_LITE_BUILD
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/imagebuf.h>
 #include <OpenImageIO/imagebufalgo.h>
 #include <OpenImageIO/string_view.h>
 
 using namespace OIIO;
-#endif
+
 
 grad_aff::Paa::Paa() {
     this->typeOfPax = TypeOfPaX::DXT5;
@@ -143,8 +142,6 @@ void grad_aff::Paa::readPaa() {
     }
 }
 
-#ifndef GRAD_AFF_LITE_BUILD
-
 void grad_aff::Paa::readImage(fs::path filename) {
     auto inImage = ImageBuf(filename.string());
     auto curWidth = inImage.spec().width;
@@ -248,8 +245,6 @@ void grad_aff::Paa::writeImage(std::string filename, int level) {
     outImage->close();
     
 }
-
-#endif
 
 void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
 
