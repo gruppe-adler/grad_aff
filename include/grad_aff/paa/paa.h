@@ -37,22 +37,23 @@ namespace grad_aff {
             GRAYwAlpha,
             UNKNOWN
         };
-        Paa();
-        Paa(std::string filename);
-        Paa(std::vector<uint8_t> data);
-        void readPaa();
-
         bool hasTransparency = false;
-
-        void readImage(fs::path filename);
-        void writeImage(std::string filename, int level = 0);
-
-        void writePaa(std::string filename, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
+        std::vector<uint8_t> getRawPixelData(uint8_t level = 0);
         std::vector<MipMap> mipMaps = {};
         TypeOfPaX typeOfPax;
 
-        std::vector<uint8_t> getRawPixelData(uint8_t level = 0);
+        Paa();
+        Paa(std::string filename);
+        Paa(std::vector<uint8_t> data);
+        
+        void readPaa();
+        void readImage(fs::path filename);
         uint8_t getRawPixelDataAt(size_t x, size_t y, uint8_t level = 0);
+
+        void calculateMipmapsAndTaggs();
+
+        void writeImage(std::string filename, int level = 0);
+        void writePaa(std::string filename, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
         void setRawPixelData(std::vector<uint8_t> data, uint8_t level = 0);
         void setRawPixelDataAt(size_t x, size_t y, uint8_t pixelData, uint8_t level = 0);
 

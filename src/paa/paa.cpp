@@ -71,6 +71,10 @@ void grad_aff::Paa::readPaa() {
         tagg.dataLength = readBytes<uint32_t>(*is);
         tagg.data = readBytes(*is, tagg.dataLength);
         taggs.push_back(tagg);
+
+        if (tagg.signature == "GGATGALF") {
+            hasTransparency = true;
+        }
     }
 
     // TODO
@@ -144,9 +148,27 @@ void grad_aff::Paa::readPaa() {
 
 void grad_aff::Paa::readImage(fs::path filename) {
     auto inImage = ImageBuf(filename.string());
-    auto curWidth = inImage.spec().width;
-    auto curHeight = inImage.spec().height;
+    inImage.read();
+    mipMaps.clear();
+
+    MipMap mipMap;
+    mipMap.width = inImage.spec().width;
+    mipMap.height = inImage.spec().height;
+    mipMap.data.resize((size_t)mipMap.width * (size_t)mipMap.height * 4);
+    inImage.get_pixels(ROI(0, mipMap.width, 0, mipMap.height), TypeDesc::UINT8, mipMap.data.data());
+    mipMap.dataLength = mipMap.data.size();
     
+    mipMaps.push_back(mipMap);
+    calculateMipmapsAndTaggs();
+}
+
+void grad_aff::Paa::calculateMipmapsAndTaggs() {
+    auto curWidth = mipMaps[0].width;
+    auto curHeight = mipMaps[0].height;
+
+    auto inImage = ImageBuf(ImageSpec(curWidth, curHeight, 4, TypeDesc::UINT8));
+    inImage.set_pixels(ROI(0, curWidth, 0, curHeight), TypeDesc::UINT8, mipMaps[0].data.data());
+
     mipMaps.clear();
     size_t counter = 1;
 
@@ -160,7 +182,7 @@ void grad_aff::Paa::readImage(fs::path filename) {
 
         for (size_t i = 0; i < pixelSize; i++) {
             size_t x = i % inImage.spec().width;
-            size_t y = i / inImage.spec().height;
+            size_t y = i / inImage.spec().width;
 
             std::vector<float_t> pixelData(inImage.nchannels());
             inImage.getpixel(x, y, pixelData.data());
@@ -184,7 +206,7 @@ void grad_aff::Paa::readImage(fs::path filename) {
 
         curHeight /= 2;
         curWidth /= 2;
-        inImage = ImageBufAlgo::resize(inImage, "", 0, ROI(0, curWidth, 0, curHeight, 0, inImage.nchannels()));
+        inImage = ImageBufAlgo::resize(inImage, "", 0, ROI(0, curWidth, 0, curHeight));
     }
 
     averageRed /= counter;
@@ -221,7 +243,6 @@ void grad_aff::Paa::readImage(fs::path filename) {
         taggFlag.dataLength = taggFlag.data.size();
         taggs.push_back(taggFlag);
     }
-    
 }
 
 void grad_aff::Paa::writeImage(std::string filename, int level) {
@@ -344,7 +365,7 @@ void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
     taggOffs.dataLength = taggOffs.data.size();
     
     // Write everything
-    std::ofstream ofs(filename + ".paa", std::ios::binary);
+    std::ofstream ofs(filename, std::ios::binary);
 
     // Write magic
     writeBytes<uint16_t>(ofs, magicNumber);
