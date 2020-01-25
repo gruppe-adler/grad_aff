@@ -7,15 +7,16 @@
 #include <sstream>
 #include <map>
 
-#include "../pbo/Entry.h"
+#include "../grad_aff.h"
 #include "../StreamUtil.h"
+#include "Entry.h"
 
 #include <tsl/ordered_map.h>
 
 namespace fs = std::filesystem;
 
 namespace grad_aff {
-    class Pbo {
+    class GRAD_AFF_API Pbo {
         std::shared_ptr<std::istream> is;  
         std::streampos dataPos = 0;
     public:
@@ -26,9 +27,7 @@ namespace grad_aff {
         void extractSingleFile(fs::path entryName, fs::path outPath, bool fullPath = true);
 
         void writePbo(fs::path outPath);
-
-        void setPboName(std::string pboName);
-
+    
         void readSingleData(fs::path entryPath);
 
         void addFile(fs::path file);

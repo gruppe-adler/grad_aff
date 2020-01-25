@@ -13,8 +13,6 @@ if(USE_STATIC_LINKING)
     add_definitions(-DOIIO_STATIC_DEFINE)
     set(LIB_TYPE STATIC)
 else()
-    # TODO
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
     set(LIB_TYPE SHARED)
 endif()
 
@@ -83,7 +81,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories("include")
 
 add_library (grad_aff ${LIB_TYPE} "src/grad_aff.cpp" "src/paa/Paa.cpp" "src/StreamUtil.cpp" "src/GridBlockTree.cpp" "src/a3lzo.cpp" "src/pbo/Pbo.cpp" "src/rap/rap.cpp" "src/rap/RapParser.cpp" "src/wrp/wrp.cpp")
-
+target_compile_definitions (grad_aff PUBLIC GRAD_AFF_EXPORTS)
 if(MSVC)
     if(USE_STATIC_LINKING)
         if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")

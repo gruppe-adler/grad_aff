@@ -249,8 +249,3 @@ std::vector<uint8_t> grad_aff::Pbo::getEntryData(fs::path entryPath) {
         return {};
     }
 }
-
-void grad_aff::Pbo::setPboName(std::string pboName)
-{
-    this->pboName = pboName;
-}
