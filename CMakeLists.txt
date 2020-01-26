@@ -9,9 +9,14 @@ include(ExternalProject)
 option(USE_STATIC_LINKING "Static Build" ON)
 option(BUILD_TESTS "Build Tests" ON)
 option(BUILD_WITH_OIIO "Build with OpenImageIO" ON)
+option(BUILD_WITH_OPENSSL "Build with OpenSSL" ON)
 
 if(BUILD_WITH_OIIO)
     add_definitions(-DGRAD_AFF_USE_OIIO)
+endif()
+
+if(BUILD_WITH_OPENSSL)
+    add_definitions(-DGRAD_AFF_USE_OPENSSL)
 endif()
 
 if(USE_STATIC_LINKING)
@@ -59,8 +64,10 @@ endif()
 # Parsing
 find_package(pegtl CONFIG REQUIRED)
 
-# SHA1 PBO
-find_package(OpenSSL REQUIRED)
+if(BUILD_WITH_OPENSSL)
+    # SHA1 PBO
+    find_package(OpenSSL REQUIRED)
+endif()
 
 if(USE_STATIC_LINKING)
     set(Boost_USE_STATIC_LIBS ON)
@@ -128,9 +135,12 @@ endif()
 target_link_libraries(grad_aff PUBLIC ${LZO2_LIBRARY})
 target_link_libraries(grad_aff PUBLIC ${SQUISH_LIBRARY})
 target_link_libraries(grad_aff PUBLIC ${Boost_LIBRARIES})
-target_link_libraries(grad_aff PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 target_link_libraries(grad_aff PUBLIC taocpp::pegtl)
 target_link_libraries(grad_aff PUBLIC tsl::ordered_map)
+
+if(BUILD_WITH_OPENSSL)
+    target_link_libraries(grad_aff PUBLIC OpenSSL::SSL OpenSSL::Crypto)
+endif()
 
 if(MINGW)
     target_link_libraries(grad_aff PUBLIC stdc++fs)

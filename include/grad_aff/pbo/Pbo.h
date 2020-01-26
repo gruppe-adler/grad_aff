@@ -18,10 +18,12 @@ namespace grad_aff {
     class Pbo {
         std::shared_ptr<std::istream> is;  
         std::streampos dataPos = 0;
+        std::streampos preHashPos = 0;
     public:
         Pbo(std::string filename);
         Pbo(std::vector<uint8_t> data, std::string pboName = "");
-        bool readPbo(bool withData = true, bool checkHash = false);
+        void readPbo(bool withData = true);
+        bool checkHash();
         void extractPbo(fs::path outPath);
         void extractSingleFile(fs::path entryName, fs::path outPath, bool fullPath = true);
 
@@ -41,5 +43,6 @@ namespace grad_aff {
         //std::vector<Entry> entries = {};
         tsl::ordered_map<std::string, std::shared_ptr<Entry>> entries = {};
         std::map<std::string, std::string> productEntries = {};
+        std::vector<uint8_t> hash;
     };
 }

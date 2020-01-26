@@ -1,6 +1,8 @@
 #include "grad_aff/pbo/Pbo.h"
 
+#ifdef GRAD_AFF_USE_OPENSSL
 #include <openssl/sha.h>
+#endif
 
 #include <boost/algorithm/string.hpp>
 namespace ba = boost::algorithm;
@@ -15,8 +17,8 @@ grad_aff::Pbo::Pbo(std::vector<uint8_t> data, std::string pboName) {
     this->pboName = pboName;
 }
 
-bool grad_aff::Pbo::readPbo(bool withData, bool checkData) {
-    //std::ifstream ifs(filename, std::ios::binary);
+void grad_aff::Pbo::readPbo(bool withData) {
+    is->seekg(0);
     auto initalZero = readBytes(*is, 1);
     if (initalZero[0] != 0) {
         throw std::runtime_error("Invalid file/no inital zero");
@@ -50,24 +52,26 @@ bool grad_aff::Pbo::readPbo(bool withData, bool checkData) {
 
     auto nullBytes = readBytes(*is, 21);
     dataPos = is->tellg();
-    
+
     if (!withData)
-        return false;
+        return;
 
     for (auto& entry : entries) {
         entry.second->data = readBytes(*is, entry.second->dataSize);
     }
 
-    if (!checkData)
-        return false;
-
-    auto preHashPos = is->tellg();
-    is->seekg(0);
-
-    auto rawPboData = readBytes(*is, preHashPos);
-
+    preHashPos = is->tellg();
     auto nullByte = readBytes(*is, 1);
-    std::vector<uint8_t> hash = readBytes(*is, 20);
+    hash = readBytes(*is, 20);
+}
+
+#ifdef GRAD_AFF_USE_OPENSSL
+bool grad_aff::Pbo::checkHash() {
+    if (preHashPos == 0)
+        readPbo(true);
+
+    is->seekg(0);
+    auto rawPboData = readBytes(*is, preHashPos);
 
     SHA_CTX context;
     if (!SHA1_Init(&context)) {
@@ -86,6 +90,7 @@ bool grad_aff::Pbo::readPbo(bool withData, bool checkData) {
 
     return (calculatedHash == hash);
 }
+#endif
 
 void grad_aff::Pbo::extractPbo(fs::path outPath)
 {
@@ -202,12 +207,10 @@ void grad_aff::Pbo::writePbo(fs::path outPath) {
     }
     writeBytes(ofs, { 0x00 });
     ofs.close();
-
-    //std::*istream *is(path / pboName, std::ios::binary | std::ios::ate);
+#ifdef GRAD_AFF_USE_OPENSSL
     auto size = is->tellg();
     is->seekg(0);
     auto rawPboData = readBytes(*is, (std::streamsize)size - 1);
-
 
     SHA_CTX context;
     if (!SHA1_Init(&context)) {
@@ -223,11 +226,12 @@ void grad_aff::Pbo::writePbo(fs::path outPath) {
     if (!SHA1_Final(reinterpret_cast<unsigned char*>(calculatedHash.data()), &context)) {
         throw std::runtime_error("SHA1 Final failed");
     }
-
+#else
+    std::vector<uint8_t> calculatedHash(20, 0);
+#endif
     std::ofstream ofsHash(outPath / pboName, std::ios::binary | std::ios::app);
     writeBytes(ofsHash, calculatedHash);
     ofsHash.close();
-
 }
 
 std::vector<uint8_t> grad_aff::Pbo::getEntryData(fs::path entryPath) {
