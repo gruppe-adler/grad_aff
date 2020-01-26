@@ -48,6 +48,7 @@ namespace grad_aff {
         
         void readPaa();
         void readImage(fs::path filename);
+
         uint8_t getRawPixelDataAt(size_t x, size_t y, uint8_t level = 0);
 
         void calculateMipmapsAndTaggs();

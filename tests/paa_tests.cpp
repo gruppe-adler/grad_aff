@@ -4,16 +4,25 @@
 
 #include "grad_aff/paa/paa.h"
 
+
+TEST_CASE("read uneven png", "[read-uneven-png-write-paa]") {
+    grad_aff::Paa test_paa_obj("DXT1_LZO_Test.paa");
+    REQUIRE_NOTHROW(test_paa_obj.readPaa());
+    test_paa_obj.calculateMipmapsAndTaggs();
+    test_paa_obj.writePaa("DXT1_LZO_Test_gil.paa");
+}
+
 TEST_CASE("empty paa read", "[empty-paa-read]") {
     grad_aff::Paa test_paa_obj("");
     REQUIRE_THROWS_WITH(test_paa_obj.readPaa(), "Invalid file/magic number");
 }
-
+#ifdef GRAD_AFF_USE_OIIO
 TEST_CASE("read uneven png", "[read-uneven-png-write-paa]") {
     grad_aff::Paa test_paa_obj;
     REQUIRE_NOTHROW(test_paa_obj.readImage("uneven_test.png"));
     test_paa_obj.writePaa("uneven_test.paa", grad_aff::Paa::TypeOfPaX::DXT1);
 }
+
 
 TEST_CASE("read DXT1 LZO", "[read-dxt1-lzo]") {
     grad_aff::Paa test_paa_obj("Bundle_Test.paa");
@@ -41,3 +50,4 @@ TEST_CASE("read bmp, write paa", "[read-bmp-write-paa]") {
     REQUIRE_NOTHROW(test_paa_obj.readImage("BigTest.bmp"));
     test_paa_obj.writePaa("BigTest_out.paa", grad_aff::Paa::TypeOfPaX::DXT1);
 }
+#endif
