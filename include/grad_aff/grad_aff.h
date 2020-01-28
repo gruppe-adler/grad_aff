@@ -7,6 +7,8 @@
 
 #define GRAD_AFF_VERSION 0.1
 
+// TODO: Handle STL Objects?
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 #    ifdef GRAD_AFF_STATIC_DEFINE
 #        define GRAD_AFF_IMPORT

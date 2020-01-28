@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../grad_aff.h"
 #include "../StreamUtil.h"
 #include "../GridBlockTree.h"
 
@@ -21,7 +22,7 @@
 namespace fs = std::filesystem;
 
 namespace grad_aff {
-    class Wrp {
+    class GRAD_AFF_API Wrp {
     private:
         std::shared_ptr<std::istream> is;
         // infoTypes

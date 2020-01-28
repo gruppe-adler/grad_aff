@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../grad_aff.h"
 #include "../StreamUtil.h"
 
 #include "ClassEntry.h"
@@ -16,7 +17,7 @@ namespace fs = std::filesystem;
 using SubType = std::variant<RapClass, RapValue, RapArray, RapExtern, RapDelete, RapArrayFlag>;
 
 namespace grad_aff {
-    class Rap {
+    class GRAD_AFF_API Rap {
     private:
         std::shared_ptr<std::istream> is;
 
