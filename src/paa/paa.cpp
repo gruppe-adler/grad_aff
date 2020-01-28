@@ -3,12 +3,20 @@
 #include <squish.h>
 #include <lzo/lzo1x.h>
 
+#include <boost/gil.hpp>
+#include <boost/gil/extension/numeric/resample.hpp>
+#include <boost/gil/extension/numeric/sampler.hpp>
+
+namespace bg = boost::gil;
+
+#ifdef GRAD_AFF_USE_OIIO
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/imagebuf.h>
 #include <OpenImageIO/imagebufalgo.h>
 #include <OpenImageIO/string_view.h>
 
 using namespace OIIO;
+#endif
 
 
 grad_aff::Paa::Paa() {
@@ -145,7 +153,7 @@ void grad_aff::Paa::readPaa() {
         mipMaps.push_back(mipmap);
     }
 }
-
+#ifdef GRAD_AFF_USE_OIIO
 void grad_aff::Paa::readImage(fs::path filename) {
     auto inImage = ImageBuf(filename.string());
     inImage.read();
@@ -160,89 +168,6 @@ void grad_aff::Paa::readImage(fs::path filename) {
     
     mipMaps.push_back(mipMap);
     calculateMipmapsAndTaggs();
-}
-
-void grad_aff::Paa::calculateMipmapsAndTaggs() {
-    auto curWidth = mipMaps[0].width;
-    auto curHeight = mipMaps[0].height;
-
-    auto inImage = ImageBuf(ImageSpec(curWidth, curHeight, 4, TypeDesc::UINT8));
-    inImage.set_pixels(ROI(0, curWidth, 0, curHeight), TypeDesc::UINT8, mipMaps[0].data.data());
-
-    mipMaps.clear();
-    size_t counter = 1;
-
-    for (int level = 0; (curHeight < curWidth ? curHeight : curHeight) > 2; level++) {
-        MipMap mipmap;
-        mipmap.width = inImage.spec().width;
-        mipmap.height = inImage.spec().height;
-
-        size_t pixelSize = (size_t)mipmap.width * mipmap.height;
-        mipmap.data.resize(pixelSize * 4);
-
-        for (size_t i = 0; i < pixelSize; i++) {
-            size_t x = i % inImage.spec().width;
-            size_t y = i / inImage.spec().width;
-
-            std::vector<float_t> pixelData(inImage.nchannels());
-            inImage.getpixel(x, y, pixelData.data());
-
-            mipmap.data[i * 4] = (uint8_t)(pixelData[0] * 255);
-            mipmap.data[i * 4 + 1] = (uint8_t)(pixelData[1] * 255);
-            mipmap.data[i * 4 + 2] = (uint8_t)(pixelData[2] * 255);
-            mipmap.data[i * 4 + 3] = (uint8_t)(pixelData[3] * 255);
-
-            if (level == 0) {
-                averageRed += (uint8_t)(pixelData[0] * 255);
-                averageGreen += (uint8_t)(pixelData[1] * 255);
-                averageBlue += (uint8_t)(pixelData[2] * 255);
-                averageAlpha += (uint8_t)(pixelData[3] * 255);
-                counter++;
-            }
-        }
-
-        mipmap.dataLength = mipmap.data.size();
-        mipMaps.push_back(mipmap);
-
-        curHeight /= 2;
-        curWidth /= 2;
-        inImage = ImageBufAlgo::resize(inImage, "", 0, ROI(0, curWidth, 0, curHeight));
-    }
-
-    averageRed /= counter;
-    averageGreen /= counter;
-    averageBlue /= counter;
-    averageAlpha /= counter;
-
-    // Write average Color Tagg
-    Tagg taggAvg;
-    taggAvg.signature = "GGATCGVA";
-    taggAvg.data.push_back(averageRed);
-    taggAvg.data.push_back(averageGreen);
-    taggAvg.data.push_back(averageBlue);
-    taggAvg.data.push_back(averageAlpha);
-    taggAvg.dataLength = taggAvg.data.size();
-    taggs.push_back(taggAvg);
-
-    Tagg taggMax;
-    taggMax.signature = "GGATCXAM";
-    for (int i = 0; i < 4; i++)
-        taggMax.data.push_back(0xFF);
-    taggMax.dataLength = taggMax.data.size();
-    taggs.push_back(taggMax);
-
-
-    // Write Transparency Flag Tagg
-    if (inImage.spec().alpha_channel != -1) {
-        hasTransparency = true;
-        Tagg taggFlag;
-        taggFlag.signature = "GGATGALF";
-        taggFlag.data.push_back(0x01);
-        for (int i = 0; i < 3; i++)
-            taggFlag.data.push_back(0xFF);
-        taggFlag.dataLength = taggFlag.data.size();
-        taggs.push_back(taggFlag);
-    }
 }
 
 void grad_aff::Paa::writeImage(std::string filename, int level) {
@@ -265,6 +190,86 @@ void grad_aff::Paa::writeImage(std::string filename, int level) {
     outImage->write_image(TypeDesc::UINT8, mipMaps[level].data.data());
     outImage->close();
     
+}
+#endif
+
+void grad_aff::Paa::calculateMipmapsAndTaggs() {
+    auto curWidth = mipMaps[0].width;
+    auto curHeight = mipMaps[0].height;
+
+    for (int level = 0; (curHeight < curWidth ? curHeight : curWidth) > 2; level++) {
+        auto dataCopy = mipMaps[level].data;
+        auto v = bg::interleaved_view(curWidth, curHeight, (bg::rgba8_pixel_t*) dataCopy.data(), (size_t)curWidth * 4);
+
+        auto newWidth = curWidth / 2;
+        auto newHeight = curHeight / 2;
+
+        auto subimage = bg::rgba8_image_t(newWidth, newHeight);
+        auto subView = bg::view(subimage);
+        bg::resize_view(v, subView, bg::bilinear_sampler());
+
+        MipMap mipmap;
+        mipmap.width = newWidth;
+        mipmap.height = newWidth;
+
+        auto it = subView.begin();
+        while (it != subView.end()) {
+            mipmap.data.push_back((*it)[0]);
+            mipmap.data.push_back((*it)[1]);
+            mipmap.data.push_back((*it)[2]);
+            mipmap.data.push_back((*it)[3]);
+            it++;
+        }
+        mipmap.dataLength = mipmap.data.size();
+
+        curWidth = newWidth;
+        curHeight = newHeight;
+    }
+
+    // Calculate average color
+    for (size_t i = 0; i < mipMaps[0].data.size(); i += 4) {
+        averageRed += mipMaps[0].data[i];
+        averageGreen += mipMaps[0].data[i + 1];
+        averageBlue += mipMaps[0].data[i + 2];
+        averageAlpha += mipMaps[0].data[i + 3];
+    }
+
+    auto pixelCount = mipMaps[0].width * mipMaps[0].height;
+
+    averageRed /= pixelCount;
+    averageGreen /= pixelCount;
+    averageBlue /= pixelCount;
+    averageAlpha /= pixelCount;
+    
+    // Write average Color Tagg
+    Tagg taggAvg;
+    taggAvg.signature = "GGATCGVA";
+    taggAvg.data.push_back(averageRed);
+    taggAvg.data.push_back(averageGreen);
+    taggAvg.data.push_back(averageBlue);
+    taggAvg.data.push_back(averageAlpha);
+    taggAvg.dataLength = taggAvg.data.size();
+    taggs.push_back(taggAvg);
+
+    Tagg taggMax;
+    taggMax.signature = "GGATCXAM";
+    for (int i = 0; i < 4; i++)
+        taggMax.data.push_back(0xFF);
+    taggMax.dataLength = taggMax.data.size();
+    taggs.push_back(taggMax);
+
+
+    // Write Transparency Flag Tagg
+    if (averageAlpha != 255) {
+        hasTransparency = true;
+        Tagg taggFlag;
+        taggFlag.signature = "GGATGALF";
+        taggFlag.data.push_back(0x01);
+        for (int i = 0; i < 3; i++)
+            taggFlag.data.push_back(0xFF);
+        taggFlag.dataLength = taggFlag.data.size();
+        taggs.push_back(taggFlag);
+    }
 }
 
 void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
