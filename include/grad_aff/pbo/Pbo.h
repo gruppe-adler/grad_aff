@@ -31,6 +31,7 @@ namespace grad_aff {
         void writePbo(fs::path outPath);
     
         void readSingleData(fs::path entryPath);
+        bool hasEntry(fs::path entryPath);
 
         void addFile(fs::path file);
         void addDir(fs::path dir);

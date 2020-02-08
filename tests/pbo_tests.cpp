@@ -29,6 +29,17 @@ TEST_CASE("meh", "[meh]") {
     REQUIRE_NOTHROW(mehPbo.writePbo(""));
 }
 
+TEST_CASE("Test has entry", "[has-entry]") {
+    grad_aff::Pbo mehPbo("A3.pbo");
+    REQUIRE_NOTHROW(mehPbo.readPbo());
+    REQUIRE_FALSE(mehPbo.hasEntry("1337"));
+    REQUIRE_FALSE(mehPbo.hasEntry("config.cpp"));
+    REQUIRE(mehPbo.hasEntry("config.bin"));
+    REQUIRE(mehPbo.hasEntry("data\\env_co.paa"));
+    REQUIRE_FALSE(mehPbo.hasEntry("data\\test.paa"));
+}
+
+
 #ifdef GRAD_AFF_USE_OPENSSL
 TEST_CASE("Hash Test", "[hash-test]") {
     grad_aff::Pbo mehPbo("map_altis_data_layers_00_01.pbo");

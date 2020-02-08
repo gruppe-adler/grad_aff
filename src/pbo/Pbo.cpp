@@ -253,3 +253,13 @@ std::vector<uint8_t> grad_aff::Pbo::getEntryData(fs::path entryPath) {
         return {};
     }
 }
+
+bool grad_aff::Pbo::hasEntry(fs::path entryPath) {
+    if (entries.size() == 0)
+        readPbo(false);
+
+    if (ba::istarts_with(entryPath.string(), productEntries["prefix"])) {
+        entryPath = (fs::path)ba::to_lower_copy(entryPath.string().substr(productEntries["prefix"].size() + 1));
+    }
+    return entries.find(entryPath.string()) != entries.end();
+}
