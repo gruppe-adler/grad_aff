@@ -197,8 +197,13 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
     auto curWidth = mipMaps[0].width;
     auto curHeight = mipMaps[0].height;
 
-    for (int level = 0; (curHeight < curWidth ? curHeight : curWidth) > 2; level++) {
-        auto dataCopy = mipMaps[level].data;
+    for (int level = 0; (curHeight < curWidth ? curHeight : curWidth) > 4; level++) {
+        auto dataCopy = mipMaps[level == 0 ? 0 : level - 1].data;
+
+        if (level == 0) {
+            mipMaps.clear();
+        }
+
         auto v = bg::interleaved_view(curWidth, curHeight, (bg::rgba8_pixel_t*) dataCopy.data(), (size_t)curWidth * 4);
 
         auto newWidth = curWidth / 2;
@@ -210,7 +215,7 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
 
         MipMap mipmap;
         mipmap.width = newWidth;
-        mipmap.height = newWidth;
+        mipmap.height = newHeight;
 
         auto it = subView.begin();
         while (it != subView.end()) {
@@ -221,6 +226,7 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
             it++;
         }
         mipmap.dataLength = mipmap.data.size();
+        mipMaps.push_back(mipmap);
 
         curWidth = newWidth;
         curHeight = newHeight;
@@ -273,6 +279,9 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
 }
 
 void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
+
+    if (mipMaps.size() <= 1)
+        calculateMipmapsAndTaggs();
 
     std::vector<MipMap> encodedMipMaps = mipMaps;
 
