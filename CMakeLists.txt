@@ -30,7 +30,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+if((${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND NOT MINGW))
     set(DEBUG_SUFFIX "d")
 else()
     set(DEBUG_SUFFIX "")
@@ -45,19 +45,21 @@ find_path(SQUISH_INCLUDE_DIR squish.h)
 find_library(SQUISH_LIBRARY squish${DEBUG_SUFFIX})
 
 # Image
-if(MINGW)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(OIIO_PKG REQUIRED IMPORTED_TARGET OpenImageIO)
+if(BUILD_WITH_OIIO)
+    if(MINGW)
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(OIIO_PKG REQUIRED IMPORTED_TARGET OpenImageIO)
 
-    if(USE_STATIC_LINKING)
-        pkg_check_modules(OPENEXR_PKG REQUIRED IMPORTED_TARGET OpenEXR)
-        pkg_check_modules(ZLIB_PKG REQUIRED IMPORTED_TARGET zlib)
-        pkg_check_modules(TIFF_PKG REQUIRED IMPORTED_TARGET libtiff-4)
-        pkg_check_modules(JPEG_PKG REQUIRED IMPORTED_TARGET libjpeg)
-        pkg_check_modules(PNG_PKG REQUIRED IMPORTED_TARGET libpng)
+        if(USE_STATIC_LINKING)
+            pkg_check_modules(OPENEXR_PKG REQUIRED IMPORTED_TARGET OpenEXR)
+            pkg_check_modules(ZLIB_PKG REQUIRED IMPORTED_TARGET zlib)
+            pkg_check_modules(TIFF_PKG REQUIRED IMPORTED_TARGET libtiff-4)
+            pkg_check_modules(JPEG_PKG REQUIRED IMPORTED_TARGET libjpeg)
+            pkg_check_modules(PNG_PKG REQUIRED IMPORTED_TARGET libpng)
+        endif()
+    else()
+        find_package(OpenImageIO CONFIG REQUIRED)
     endif()
-else()
-    find_package(OpenImageIO CONFIG REQUIRED)
 endif()
 # Parsing
 find_package(pegtl CONFIG REQUIRED)
@@ -149,7 +151,4 @@ if(BUILD_TESTS)
     add_subdirectory ("tests")
 endif()
 
-# TOOD dyn build
-add_custom_command(TARGET grad_aff POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:grad_aff> ${PROJECT_SOURCE_DIR}/lib/grad_aff.lib
-)
+# TOOD Install Target

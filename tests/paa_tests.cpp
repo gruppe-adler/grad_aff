@@ -17,7 +17,7 @@ TEST_CASE("empty paa read", "[empty-paa-read]") {
     REQUIRE_THROWS_WITH(test_paa_obj.readPaa(), "Invalid file/magic number");
 }
 #ifdef GRAD_AFF_USE_OIIO
-TEST_CASE("read uneven png", "[read-uneven-png-write-paa]") {
+TEST_CASE("read uneven png2", "[read-uneven-png-write-paa-2]") {
     grad_aff::Paa test_paa_obj;
     REQUIRE_NOTHROW(test_paa_obj.readImage("uneven_test.png"));
     test_paa_obj.writePaa("uneven_test.paa", grad_aff::Paa::TypeOfPaX::DXT1);
