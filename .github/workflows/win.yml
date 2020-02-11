@@ -38,9 +38,9 @@ jobs:
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
         useVcpkgToolchainFile: true
-        buildWithCMakeArgs: '-DBUILD_WITH_OIIO=OFF -DBUILD_WITH_OPENSSL=OFF -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install -- install -v'
+        buildWithCMakeArgs: ' -- install -v'
         buildDirectory: '${{ runner.workspace }}/b/ninja/'
-        cmakeAppendedArgs: '-G Ninja '
+        cmakeAppendedArgs: '-G Ninja -DBUILD_WITH_OIIO=OFF -DBUILD_WITH_OPENSSL=OFF -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install'
         
     - uses: actions/upload-artifact@v1
       with:
