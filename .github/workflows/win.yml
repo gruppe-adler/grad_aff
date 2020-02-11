@@ -3,7 +3,7 @@ on: [push]
 
 jobs:
   job:
-    name: ${{ matrix.os }}-win-ci
+    name: ${{ matrix.os }}-${{ matrix.displayName }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -17,6 +17,13 @@ jobs:
             vcpkgPackages: 'libsquish lzo boost-gil boost-algorithm tsl-ordered-map pegtl'
             configuration: 'x64.*'
             cmakeArgs: '-DBUILD_WITH_OIIO=OFF -DBUILD_WITH_OPENSSL=OFF -DBUILD_TESTS=OFF'
+          - os: windows-latest
+            displayName: grad_aff_x64_static
+            triplet: x64-windows-static
+            vcpkgCommitId: '56a12f6ee9fef0991a25a4c7e0a0b2e843bfe5ad'
+            vcpkgPackages: 'libsquish lzo boost-gil boost-algorithm tsl-ordered-map pegtl openimageio openssl'
+            configuration: 'x64.*'
+            cmakeArgs: '-DBUILD_TESTS=OFF' 
 
     steps:
     - uses: actions/checkout@v1
