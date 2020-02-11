@@ -13,7 +13,7 @@ jobs:
           - os: windows-latest
             triplet: x64-windows-static
             vcpkgCommitId: '56a12f6ee9fef0991a25a4c7e0a0b2e843bfe5ad'
-            vcpkgPackages: 'libsquish lzo boost-gil boost-algorithm tsl-ordered-map'
+            vcpkgPackages: 'libsquish lzo boost-gil boost-algorithm tsl-ordered-map pegtl'
             configuration: 'x64.*'
 
     steps:
