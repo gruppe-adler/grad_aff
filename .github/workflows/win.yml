@@ -9,8 +9,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
+        linkType: [dynamic, static]
         include:
           - os: windows-latest
+            linkType: static
             displayName: grad_aff_lite_x64_static
             triplet: x64-windows-static
             vcpkgCommitId: '56a12f6ee9fef0991a25a4c7e0a0b2e843bfe5ad'
@@ -18,6 +20,7 @@ jobs:
             configuration: 'x64.*'
             cmakeArgs: '-DBUILD_WITH_OIIO=OFF -DBUILD_WITH_OPENSSL=OFF -DBUILD_TESTS=OFF'
           - os: windows-latest
+            linkType: dynamic
             displayName: grad_aff_x64_static
             triplet: x64-windows-static
             vcpkgCommitId: '56a12f6ee9fef0991a25a4c7e0a0b2e843bfe5ad'
