@@ -75,6 +75,16 @@ if(USE_STATIC_LINKING)
     set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(Boost_USE_DEBUG_LIBS ON)
+    set(Boost_USE_RELEASE_LIBS OFF)
+    set(Boost_USE_DEBUG_RUNTIME ON)
+else()
+    set(Boost_USE_DEBUG_LIBS OFF)
+    set(Boost_USE_RELEASE_LIBS ON)
+    set(Boost_USE_DEBUG_RUNTIME OFF)
+endif()
+
 find_package(Boost 1.70.0 COMPONENTS)
 
 find_package(tsl-ordered-map CONFIG REQUIRED)
@@ -151,4 +161,18 @@ if(BUILD_TESTS)
     add_subdirectory ("tests")
 endif()
 
-# TOOD Install Target
+# Install
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/grad_aff" DESTINATION "include" FILES_MATCHING PATTERN "*.h")
+if(NOT USE_STATIC_LINKING AND MSVC)
+    install(FILES $<TARGET_PDB_FILE:grad_aff> DESTINATION bin OPTIONAL)
+
+    # Copy Dep DLLs
+    file(GLOB GRAD_AFF_DLSS "${CMAKE_CURRENT_BINARY_DIR}/*.dll")
+    install(FILES ${GRAD_AFF_DLSS} DESTINATION bin)
+endif()
+
+install(TARGETS grad_aff
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+)

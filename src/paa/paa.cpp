@@ -32,10 +32,8 @@ grad_aff::Paa::Paa(std::vector<uint8_t> data) {
     this->is = std::make_shared<std::stringstream>(std::string(data.begin(), data.end()));
 }
 
-void grad_aff::Paa::readPaa() {
-
-    //std::ifstream ifs(filename, std::ios::binary);
-
+void grad_aff::Paa::readPaa(bool peek) {
+    is->seekg(0);
     magicNumber = readBytes<uint16_t>(*is);
     switch (magicNumber)
     {
@@ -97,6 +95,12 @@ void grad_aff::Paa::readPaa() {
         mipmap.width = readBytes<uint16_t>(*is);
         mipmap.height = readBytes<uint16_t>(*is);
         mipmap.dataLength = readBytesAsArmaUShort(*is);
+
+        if (peek) {
+            mipMaps.push_back(mipmap);
+            return;
+        }
+
         mipmap.data = readBytes(*is, mipmap.dataLength);
 
         // check if top most bit is set, which indicates lzo compression for DXT files
@@ -198,20 +202,22 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
     auto curHeight = mipMaps[0].height;
 
     for (int level = 0; (curHeight < curWidth ? curHeight : curWidth) > 4; level++) {
-        auto dataCopy = mipMaps[level == 0 ? 0 : level - 1].data;
-
         if (level == 0) {
+            MipMap mipMap = mipMaps[0];
             mipMaps.clear();
+            mipMaps.push_back(mipMap);
+            continue;
         }
 
-        auto v = bg::interleaved_view(curWidth, curHeight, (bg::rgba8_pixel_t*) dataCopy.data(), (size_t)curWidth * 4);
+        auto dataCopy = mipMaps[level - 1].data;
+        auto view = bg::interleaved_view(curWidth, curHeight, (bg::rgba8_pixel_t*) dataCopy.data(), (size_t)curWidth * 4);
 
         auto newWidth = curWidth / 2;
         auto newHeight = curHeight / 2;
 
         auto subimage = bg::rgba8_image_t(newWidth, newHeight);
         auto subView = bg::view(subimage);
-        bg::resize_view(v, subView, bg::bilinear_sampler());
+        bg::resize_view(view, subView, bg::bilinear_sampler());
 
         MipMap mipmap;
         mipmap.width = newWidth;
@@ -279,6 +285,14 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
 }
 
 void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
+
+    // Write everything
+    std::ofstream os(filename, std::ios::binary);
+    writePaa(os, typeOfPaX);
+    os.close();
+}
+
+void grad_aff::Paa::writePaa(std::ostream& os, TypeOfPaX typeOfPaX) {
 
     if (mipMaps.size() <= 1)
         calculateMipmapsAndTaggs();
@@ -378,44 +392,39 @@ void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
     }
     taggOffs.dataLength = taggOffs.data.size();
     
-    // Write everything
-    std::ofstream ofs(filename, std::ios::binary);
-
     // Write magic
-    writeBytes<uint16_t>(ofs, magicNumber);
+    writeBytes<uint16_t>(os, magicNumber);
     for (auto& tagg : taggs) {
-        writeString(ofs, tagg.signature);
-        writeBytes<uint32_t>(ofs, tagg.dataLength);
-        writeBytes(ofs, tagg.data);
+        writeString(os, tagg.signature);
+        writeBytes<uint32_t>(os, tagg.dataLength);
+        writeBytes(os, tagg.data);
     }
 
     // Write offset Tag
-    writeString(ofs, taggOffs.signature);
-    writeBytes<uint32_t>(ofs, taggOffs.dataLength);
-    writeBytes(ofs, taggOffs.data);
+    writeString(os, taggOffs.signature);
+    writeBytes<uint32_t>(os, taggOffs.dataLength);
+    writeBytes(os, taggOffs.data);
 
-    writeBytes<uint16_t>(ofs, palette.dataLength);
+    writeBytes<uint16_t>(os, palette.dataLength);
     if (palette.dataLength > 0) {
         // TODO:
     }
 
     for (auto& mipmap : encodedMipMaps) {
-        writeBytes<uint16_t>(ofs, mipmap.width);
-        writeBytes<uint16_t>(ofs, mipmap.height);
-        writeBytesAsArmaUShort(ofs, mipmap.dataLength);
-        writeBytes(ofs, mipmap.data);
+        writeBytes<uint16_t>(os, mipmap.width);
+        writeBytes<uint16_t>(os, mipmap.height);
+        writeBytesAsArmaUShort(os, mipmap.dataLength);
+        writeBytes(os, mipmap.data);
     }
 
-    writeBytes<uint16_t>(ofs, 0x00);
-    writeBytes<uint16_t>(ofs, 0x00);
-    writeBytes<uint16_t>(ofs, 0x00);
-
-    ofs.close();
+    writeBytes<uint16_t>(os, 0x00);
+    writeBytes<uint16_t>(os, 0x00);
+    writeBytes<uint16_t>(os, 0x00);
 }
 
 std::vector<uint8_t> grad_aff::Paa::getRawPixelData(uint8_t level)
 {
-    if (this->mipMaps.size() == 0) {
+    if (this->mipMaps.size() == 0 || this->mipMaps[0].data.size() == 0) {
         return {};
     } else {
         return this->mipMaps[level].data;
@@ -424,7 +433,7 @@ std::vector<uint8_t> grad_aff::Paa::getRawPixelData(uint8_t level)
 
 
 uint8_t grad_aff::Paa::getRawPixelDataAt(size_t x, size_t y, uint8_t level) {
-    if (this->mipMaps.size() == 0) {
+    if (this->mipMaps.size() == 0 || this->mipMaps[0].data.size() == 0) {
         return {};
     }
     else {

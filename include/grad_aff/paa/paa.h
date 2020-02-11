@@ -54,7 +54,7 @@ namespace grad_aff {
         Paa(std::string filename);
         Paa(std::vector<uint8_t> data);
         
-        void readPaa();
+        void readPaa(bool peek = false);
         void readImage(fs::path filename);
 
         std::vector<uint8_t> getRawPixelData(uint8_t level = 0);
@@ -64,6 +64,7 @@ namespace grad_aff {
 
         void writeImage(std::string filename, int level = 0);
         void writePaa(std::string filename, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
+        void writePaa(std::ostream& os, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
         void setRawPixelData(std::vector<uint8_t> data, uint8_t level = 0);
         void setRawPixelDataAt(size_t x, size_t y, uint8_t pixelData, uint8_t level = 0);
     };
