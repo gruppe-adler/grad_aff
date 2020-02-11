@@ -36,6 +36,7 @@ jobs:
       uses: lukka/run-cmake@v0
       id: runcmake
       with:
+        cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
         cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
         useVcpkgToolchainFile: true
         buildWithCMakeArgs: ' -- install -v'
