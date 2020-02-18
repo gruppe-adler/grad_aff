@@ -17,10 +17,13 @@ namespace grad_aff {
         std::shared_ptr<std::istream> is;
     public:
         uint32_t version = 0;
+        uint32_t numberOfLods = 0;
 
         Odol(std::string filename);
         Odol(std::vector<uint8_t> data);
 
         void readOdol();
+
+        void readModelInfo();
     };
 };
