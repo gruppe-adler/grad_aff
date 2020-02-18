@@ -4,16 +4,18 @@
 #include <tao/pegtl.hpp>
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
 #include "Class.h"
+#include "ClassEntry.h"
 
 namespace pegtl = tao::pegtl;
 
 using namespace pegtl;
 
-namespace grad_aff::RapParser
+namespace grad_aff::RapParser2
 {
     struct ws : star<space> {};
 
@@ -71,11 +73,35 @@ namespace grad_aff::RapParser
     template<>
     struct action< identifier >
     {
+        /*
         template< typename Input >
-        static void apply(const Input& in, std::string& v)
+        static void apply(const Input& in, std::shared_ptr<RapClass> state)
         {
-            v = in.string();
+            auto v = in.string();
+            //state->classEntries.push_back()
             std::cout << "Found identifier: " << v << std::endl;
+
+        }
+        */
+
+        template< typename Input >
+        static void apply(const Input& in, std::shared_ptr<RapClass>& state)
+        {
+            auto str = in.string();
+            std::cout << str << std::endl;
+            state->name = str;
+            //state.name = str;
+        }
+
+        template< typename Input >
+        static void apply(const Input& in, std::shared_ptr<RapValue>& state)
+        {
+            if (!state) {
+                state = std::make_shared<RapValue>();
+            }
+            auto str = in.string();
+            std::cout << str << std::endl;
+            state->name = str;
         }
     };
 
@@ -83,9 +109,9 @@ namespace grad_aff::RapParser
     struct action< inheritance >
     {
         template< typename Input >
-        static void apply(const Input& in, std::string& v)
+        static void apply(const Input& in, RapClass state)
         {
-            v = in.string();
+            auto v = in.string();
             std::cout << "Found inheritance: " << v << std::endl;
         }
     };
@@ -94,9 +120,9 @@ namespace grad_aff::RapParser
     struct action< number >
     {
         template< typename Input >
-        static void apply(const Input& in, std::string& v)
+        static void apply(const Input& in, RapClass state)
         {
-            v = in.string();
+            auto v = in.string();
             std::cout << "Found number: " << v << std::endl;
         }
     };
@@ -105,9 +131,9 @@ namespace grad_aff::RapParser
     struct action< decimal >
     {
         template< typename Input >
-        static void apply(const Input& in, std::string& v)
+        static void apply(const Input& in, RapClass state)
         {
-            v = in.string();
+            auto v = in.string();
             std::cout << "Found decimal: " << v << std::endl;
         }
     };
@@ -115,11 +141,22 @@ namespace grad_aff::RapParser
     template<>
     struct action< string_without<'"'> >
     {
+        /*
         template< typename Input >
-        static void apply(const Input& in, std::string& v)
+        static void apply(const Input& in, std::shared_ptr<RapClass> state)
         {
-            v = in.string();
+            auto v = in.string();
             std::cout << "Found string: " << v << std::endl;
+        }
+        */
+
+        template< typename Input >
+        static void apply(const Input& in, std::shared_ptr<RapValue>& state)
+        {
+
+            auto v = in.string();
+            std::cout << "Found string: " << v << std::endl;
+            //state->value = in.string();
         }
     };
 
@@ -127,10 +164,51 @@ namespace grad_aff::RapParser
     struct action< string_without<'\''> >
     {
         template< typename Input >
-        static void apply(const Input& in, std::string& v)
+        static void apply(const Input& in, std::shared_ptr<RapClass>& state)
         {
-            v = in.string();
+            auto v = in.string();
+            //state->classEntries(Rap)
             std::cout << "Found string: " << v << std::endl;
         }
+        template< typename Input >
+        static void apply(const Input& in, std::shared_ptr<RapValue>& state)
+        {
+            auto v = in.string();
+            std::cout << "Found string: " << v << std::endl;
+            //state->value = in.string();
+        }
+    };
+    /*
+    template<>
+    struct action< tokenKey >
+        : tao::pegtl::change_states<std::shared_ptr<RapValue>>
+    {
+        template< typename Input >
+        static void apply(const Input& in, std::shared_ptr<RapValue>& newRapValue, std::shared_ptr<RapClass>& rapClass)
+        {
+            newRapValue = std::make_shared<RapValue>();
+            
+            rapClass.classEntries.push_back(newRapValue);
+        }
+
+        template< typename Input >
+        static void success(const Input& in, std::shared_ptr<RapValue>& newRapValue, std::shared_ptr<RapClass>& rapClass)
+        {
+            newRapValue = std::make_shared<RapValue>();
+
+            rapClass->classEntries.push_back(newRapValue);
+            //newRapValue = std::make_shared<RapValue>();
+            //rapClass.classEntries.push_back(newRapValue);
+        }
+    };
+    */
+
+}
+
+namespace grad_aff {
+    class RapParser {
+    public:
+        RapParser();
+        void parseConfig(std::string filename);
     };
 }
