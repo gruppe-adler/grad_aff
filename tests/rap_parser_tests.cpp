@@ -18,6 +18,9 @@ TEST_CASE("parser simple class", "[parse-simple-class]") {
     auto sharedClass = std::make_shared<RapClass>();
     sharedClass->name = "Lol";
 
+    std::vector<std::shared_ptr<ClassEntry>> stuff;
+
     pegtl::file_input in("test.cpp");
-    pegtl::parse< grad_aff::RapParser2::topLevel, grad_aff::RapParser2::action >(in, sharedClass);
+    pegtl::parse< grad_aff::RapParser2::topLevel, grad_aff::RapParser2::action >(in, stuff);
+    std::cout << "test" << std::endl;
 }

@@ -7,6 +7,11 @@
 #include <fstream>
 #include <vector>
 
+TEST_CASE("parse simple config", "[parse-simple-config]") {
+    grad_aff::Rap test_rap_obj;
+    REQUIRE_NOTHROW(test_rap_obj.parseConfig("test.cpp"));
+}
+
 TEST_CASE("read simple config", "[read-simple-config]") {
     grad_aff::Rap test_rap_obj("configTest.bin");
     REQUIRE_NOTHROW(test_rap_obj.readRap());

@@ -3,6 +3,9 @@
 #include "../grad_aff.h"
 #include "../StreamUtil.h"
 
+#include <tao/pegtl.hpp>
+
+#include "RapParser.h"
 #include "ClassEntry.h"
 
 #include <variant>
@@ -27,6 +30,7 @@ namespace grad_aff {
         std::shared_ptr<ClassEntry> readClassEntry(std::istream& is);
 
     public:
+        Rap();
         Rap(std::string filename);
         Rap(std::vector<uint8_t> data, std::string rapName = "");
         std::string rapName = "";
@@ -34,5 +38,10 @@ namespace grad_aff {
         std::vector<std::shared_ptr<ClassEntry>> classEntries = {};
 
         void readRap();
+        void parseConfig(fs::path path);
+
+        void preprocess(std::string& input);
+
+        void convertClass(std::vector<std::shared_ptr<ClassEntry>>& entries, std::shared_ptr<ClassEntry>& rootPtr, std::vector<std::shared_ptr<ClassEntry>>::iterator& it);
     };
 }

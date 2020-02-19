@@ -1,5 +1,8 @@
 #include "grad_aff/rap/rap.h"
 
+grad_aff::Rap::Rap() {
+
+}
 
 grad_aff::Rap::Rap(std::string pboFilename) {
     this->is = std::make_shared<std::ifstream>(pboFilename, std::ios::binary);
@@ -164,6 +167,7 @@ std::string grad_aff::Rap::readClassBody(std::istream& is, std::vector<std::shar
 
 
 void grad_aff::Rap::readRap() {
+    this->classEntries.clear();
     //auto signature = readBytes(*is, 4);
     // TODO assert;
 
@@ -203,4 +207,76 @@ void grad_aff::Rap::readRap() {
     // TODO enums
 
     //readClassBody(*is, classEntries);
+}
+
+// lol
+void grad_aff::Rap::preprocess(std::string& input) {
+    std::vector< boost::iterator_range<std::string::iterator> > findVec;
+    boost::find_all(findVec, input, "//");
+
+    auto com = input.find("//");
+
+    while (com != input.npos) {
+        auto nL = input.find('\n', com);
+
+        input.erase(com, nL - com);
+
+        com = input.find("//");
+    }
+
+
+}
+
+void grad_aff::Rap::convertClass(std::vector<std::shared_ptr<ClassEntry>>& entries, std::shared_ptr<ClassEntry>& rootPtr, std::vector<std::shared_ptr<ClassEntry>>::iterator& it) {
+
+    auto rc = std::make_shared<RapClass>();
+    rc->name = (*it)->name;
+    rc->type = (*it)->type;
+    rootPtr = rc;
+   
+    it++;
+
+    //auto rc = std::static_pointer_cast<RapClass>(*it);
+
+    for (it; it != entries.end(); it++) {
+
+        if (!(*it)) {
+            return;
+        }
+
+        rc->classEntries.push_back(*it);
+
+        if ((*it)->type == 0) {
+            convertClass(entries, rc->classEntries.back(), it);
+        }
+    }
+}
+
+void grad_aff::Rap::parseConfig(fs::path path) {
+
+    this->classEntries.clear();
+
+    std::ifstream file(path);
+    std::string stringInput((std::istreambuf_iterator<char>(file)),
+        std::istreambuf_iterator<char>());
+
+    preprocess(stringInput);
+
+    std::cout << stringInput << std::endl;
+
+    std::vector<std::shared_ptr<ClassEntry>> entries;
+
+    pegtl::memory_input in(stringInput, std::string(""));
+    pegtl::parse< grad_aff::RapParser2::topLevel, grad_aff::RapParser2::action >(in, entries);
+
+    
+
+    for (auto it = entries.begin(); it != entries.end(); it++) {
+        this->classEntries.push_back(*it);
+
+        if ((*it)->type == 0) {
+            convertClass(entries, this->classEntries.back(), it);
+        }
+    }
+
 }
