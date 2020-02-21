@@ -43,29 +43,29 @@ namespace grad_aff::RapParser2
     struct numeral_one : pegtl::sor< numeral_two< D, E >, numeral_three< D, E > > {};
 
     struct decimal : numeral_one< pegtl::digit, pegtl::one< 'e', 'E' > > {};
-    struct hexadecimal : pegtl::if_must< pegtl::istring< '0', 'x' >, numeral_one< pegtl::xdigit, pegtl::one< 'p', 'P' > > > {};
-    struct numeral : pegtl::sor< hexadecimal, decimal > {};
 
     //struct decimalNumber : seq<plus<digit>, opt<keyword<'.'>, plus<digit>>, keyword<';'>> {};// , if_then_else<keyword<'.'>, failure, success >> {};// , if_must<plus<digit>, keyword<'.'>>, must<keyword<';'>> > {};
 
     struct decimalNumber : seq<decimal> {};
 
+    //struct dec2 : seq < opt<one< '+', '-' >>, plus<digit>, if_must<one< '.' >, plus<digit>> > {};
+    struct dec2 : seq <opt<one< '+', '-' >>, plus<digit>, opt<if_must<one< '.' >, plus<digit>>> > {};
+
+    struct decArr : dec2 {};
 
     template< char C > struct string_without : pegtl::star< pegtl::not_one< C, 10, 13 > > {};
 
-    struct quoted_value : pegtl::if_must< pegtl::one< '"' >, string_without< '"' >, pegtl::one< '"' > > {};
-    struct single_quoted_value : pegtl::if_must< pegtl::one< '\'' >, string_without< '\'' >, pegtl::one< '\'' > > {};
+    struct quoted_value : if_must< one< '"' >, string_without< '"' >, one< '"' > > {};
+    struct single_quoted_value : if_must< one< '\'' >, string_without< '\'' >, one< '\'' > > {};
 
-    struct array_ : if_must< one<'{'>, ws, list_must<sor<decimalNumber, quoted_value, single_quoted_value, array_, ws>, seq<ws, keyword<','>, ws>>, ws, one<'}'>> {};
+    struct array_ : if_must< one<'{'>, ws, opt<list_must<sor<dec2, quoted_value, single_quoted_value, array_>, seq<ws, one<','>, ws>>>, ws, one<'}'>> {};
 
     struct number : until<keyword<';'>, digit> {};
     struct stringD : keyword<'"'>, until<keyword<';'>, any> {};
 
-    struct tokenKey : seq<identifier, ws, keyword<'='>, ws, sor<decimalNumber, quoted_value, single_quoted_value>, ws, keyword<';'>, ws> {};
+    struct tokenKey : seq<identifier, ws, one<'='>, ws, sor<dec2, quoted_value, single_quoted_value>, ws, keyword<';'>, ws> {};
 
-    struct token : opt_must<tokenKey, ws> {};
-
-    struct tokenArr : seq<identifier, keyword<'[', ']'>, ws, keyword<'='>, ws, array_, ws, keyword<';'>, ws> {};
+    struct tokenArr : seq<identifier, keyword<'[', ']'>, ws, one<'='>, ws, array_, ws, keyword<';'>, ws> {};
        
     struct rapClass : seq<header, ws, opt<star<sor<tokenKey, tokenArr, rapClass>, ws>>, keyword<'}',';'>, ws> {};// , pegtl::opt<inheritance>, pegtl::string<'{'>, pegtl::string<'{', ';' >> {};
 
@@ -75,21 +75,31 @@ namespace grad_aff::RapParser2
     struct action
     {};
 
+    template<>
+    struct action< array_ >
+    {
+        template< typename Input >
+        static void apply(const Input& in, std::vector< std::shared_ptr<ClassEntry>>& state)
+        {
+            std::string str = in.string();
+
+            state.pop_back();
+
+            auto lastEntryName = state.back()->name;
+            auto rapArr = std::make_shared<RapArray>();
+            rapArr->name = lastEntryName;
+            rapArr->type = 2;
+            std::string dec = in.string();
+            rapArr->arrayElements.clear();
+            rapArr->arrayElements.push_back(str);
+            // TODO:
+            //state.push_back(rapArr);
+        }
+    };
 
     template<>
     struct action< identifier >
     {
-        /*
-        template< typename Input >
-        static void apply(const Input& in, std::shared_ptr<RapClass> state)
-        {
-            auto v = in.string();
-            //state->classEntries.push_back()
-            std::cout << "Found identifier: " << v << std::endl;
-
-        }
-        */
-
         template< typename Input >
         static void apply(const Input& in, std::vector< std::shared_ptr<ClassEntry>>& state)
         {
@@ -105,41 +115,11 @@ namespace grad_aff::RapParser2
             state.push_back(rc);
             //state.name = str;
         }        
-        
-        template< typename Input >
-        static void apply(const Input& in, std::shared_ptr<RapClass>& state)
-        {
-            auto str = in.string();
-            std::cout << str << std::endl;
-            state->name = str;
-            //state.name = str;
-        }
-
-        template< typename Input >
-        static void apply(const Input& in, std::shared_ptr<RapValue>& state)
-        {
-            if (!state) {
-                state = std::make_shared<RapValue>();
-            }
-            auto str = in.string();
-            std::cout << str << std::endl;
-            state->name = str;
-        }
     };
 
     template<>
-        struct action< rapClass >
+    struct action< rapClass >
     {
-        /*
-        template< typename Input >
-        static void apply(const Input& in, std::shared_ptr<RapClass> state)
-        {
-            auto v = in.string();
-            //state->classEntries.push_back()
-            std::cout << "Found identifier: " << v << std::endl;
-
-        }
-        */
 
         template< typename Input >
         static void apply(const Input& in, std::vector< std::shared_ptr<ClassEntry>>& state)
@@ -183,26 +163,8 @@ namespace grad_aff::RapParser2
     };
 
     template<>
-    struct action< number >
-    {
-        template< typename Input >
-        static void apply(const Input& in, RapClass state)
-        {
-            auto v = in.string();
-            std::cout << "Found number: " << v << std::endl;
-        }
-    };
-
-    template<>
     struct action< decimal >
     {
-        template< typename Input >
-        static void apply(const Input& in, RapClass state)
-        {
-            auto v = in.string();
-            std::cout << "Found decimal: " << v << std::endl;
-        }
-
         template< typename Input >
         static void apply(const Input& in, std::vector< std::shared_ptr<ClassEntry>>& state)
         {
@@ -227,6 +189,64 @@ namespace grad_aff::RapParser2
     };
 
     template<>
+    struct action< dec2 >
+    {
+        template< typename Input >
+        static void apply(const Input& in, std::vector< std::shared_ptr<ClassEntry>>& state)
+        {
+            auto lastEntryName = std::static_pointer_cast<RapValue>(state.back())->name;
+            auto rapVal = std::make_shared<RapValue>();
+            rapVal->name = lastEntryName;
+            std::string dec = in.string();
+
+            if (dec.find(".") != dec.npos) {
+                rapVal->value = std::stof(dec);
+                rapVal->type = 1;
+                rapVal->subType = 1;
+            }
+            else {
+                rapVal->value = std::stol(dec);
+                rapVal->type = 1;
+                rapVal->subType = 2;
+            }
+            state[state.size() - 1] = rapVal;
+        }
+
+    };
+
+    template<>
+    struct action< decArr >
+    {
+        template< typename Input >
+        static void apply(const Input& in, std::vector< std::shared_ptr<ClassEntry>>& state)
+        {
+
+            if (state.back()->type != 2) {
+                auto lastEntryName = state.back()->name;
+                state.pop_back();
+                auto rapVal = std::make_shared<RapArray>();
+                rapVal->name = lastEntryName;
+                rapVal->type = 2;
+                state.push_back(rapVal);
+            }
+
+            auto arr = std::static_pointer_cast<RapArray>(state.back());
+
+            std::variant<std::string, float_t, int32_t, RapArray> value;
+            std::string dec = in.string();
+
+            if (dec.find(".") != dec.npos) {
+                value = std::stof(dec);
+            }
+            else {
+                value = std::stol(dec);
+            }
+            arr->arrayElements.push_back(value);
+        }
+
+    };
+
+    template<>
     struct action< string_without<'"'> >
     {
         template< typename Input >
@@ -239,15 +259,6 @@ namespace grad_aff::RapParser2
             rapVal->type = 1;
             rapVal->subType = 0;
             state[state.size() - 1] = rapVal;
-        }
-
-        template< typename Input >
-        static void apply(const Input& in, std::shared_ptr<RapValue>& state)
-        {
-
-            auto v = in.string();
-            std::cout << "Found string: " << v << std::endl;
-            //state->value = in.string();
         }
     };
 
@@ -262,21 +273,6 @@ namespace grad_aff::RapParser2
             rapVal->name = lastEntryName;
             rapVal->value = in.string();
             state[state.size() - 1] = rapVal;
-        }
-
-        template< typename Input >
-        static void apply(const Input& in, std::shared_ptr<RapClass>& state)
-        {
-            auto v = in.string();
-            //state->classEntries(Rap)
-            std::cout << "Found string: " << v << std::endl;
-        }
-        template< typename Input >
-        static void apply(const Input& in, std::shared_ptr<RapValue>& state)
-        {
-            auto v = in.string();
-            std::cout << "Found string: " << v << std::endl;
-            //state->value = in.string();
         }
     };
     /*

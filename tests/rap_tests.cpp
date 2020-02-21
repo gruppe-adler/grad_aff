@@ -7,6 +7,11 @@
 #include <fstream>
 #include <vector>
 
+TEST_CASE("parse with array", "[parse-array-simple-config]") {
+    grad_aff::Rap test_rap_obj;
+    test_rap_obj.parseConfig("roadslibArray.cfg");
+}
+
 TEST_CASE("parse simple config", "[parse-simple-config]") {
     grad_aff::Rap test_rap_obj;
     REQUIRE_NOTHROW(test_rap_obj.parseConfig("test.cpp"));

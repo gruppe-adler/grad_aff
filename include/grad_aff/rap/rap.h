@@ -40,6 +40,8 @@ namespace grad_aff {
         void readRap();
         void parseConfig(fs::path path);
 
+        void readConfig(fs::path path);
+
         void preprocess(std::string& input);
 
         void convertClass(std::vector<std::shared_ptr<ClassEntry>>& entries, std::shared_ptr<ClassEntry>& rootPtr, std::vector<std::shared_ptr<ClassEntry>>::iterator& it);

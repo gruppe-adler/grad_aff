@@ -20,7 +20,7 @@ TEST_CASE("parser simple class", "[parse-simple-class]") {
 
     std::vector<std::shared_ptr<ClassEntry>> stuff;
 
-    pegtl::file_input in("test.cpp");
+    pegtl::file_input in("roadslibArray.cfg");
     pegtl::parse< grad_aff::RapParser2::topLevel, grad_aff::RapParser2::action >(in, stuff);
     std::cout << "test" << std::endl;
 }

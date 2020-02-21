@@ -165,6 +165,7 @@ std::string grad_aff::Rap::readClassBody(std::istream& is, std::vector<std::shar
     return classBodyInheritedClassname;
 }
 
+//void grad_aff::Rap::re
 
 void grad_aff::Rap::readRap() {
     this->classEntries.clear();
@@ -262,7 +263,7 @@ void grad_aff::Rap::parseConfig(fs::path path) {
 
     preprocess(stringInput);
 
-    std::cout << stringInput << std::endl;
+    //std::cout << stringInput << std::endl;
 
     std::vector<std::shared_ptr<ClassEntry>> entries;
 
