@@ -14,13 +14,17 @@ include_directories (${tests_SOURCE_DIR}/include)
 
 #add_executable (grad_aff_tests "grad_aff_tests.cpp" "wrp_tests.cpp")
 #add_executable (grad_aff_tests "grad_aff_tests.cpp" "pbo_tests.cpp")
-add_executable (grad_aff_tests "grad_aff_tests.cpp" "rap_tests.cpp")
+add_executable (grad_aff_tests "grad_aff_tests.cpp" "wrp_tests.cpp")
+#add_executable (grad_aff_tests "grad_aff_tests.cpp" "pbo_tests.cpp")
+#add_executable (grad_aff_tests "grad_aff_tests.cpp" "rap_tests.cpp")
 #add_executable (grad_aff_tests "grad_aff_tests.cpp" "rap_parser_tests.cpp")
 #add_executable (grad_aff_tests "grad_aff_tests.cpp" "paa_tests.cpp")
+add_executable(grad_aff_tests_p3d "p3d_tests.cpp")
 
 target_link_libraries(grad_aff_tests PRIVATE Catch2::Catch2)
 
 target_link_libraries(grad_aff_tests PRIVATE grad_aff)
+target_link_libraries(grad_aff_tests_p3d PRIVATE grad_aff)
 
 if(MINGW)
     target_link_libraries(grad_aff_tests PUBLIC OpenMP::OpenMP_CXX)

@@ -28,6 +28,8 @@ namespace grad_aff {
     T peekBytes(std::istream& is);
 
     XYZTriplet readXYZTriplet(std::istream &is);
+    TransformMatrix readMatrix(std::istream& is);
+    D3DCOLORVALUE readD3ColorValue(std::istream& is);
     
     std::string readString(std::istream& is, int count);
     std::vector<uint8_t> readBytes(std::istream& is, std::streamsize length);
@@ -40,6 +42,14 @@ namespace grad_aff {
     std::pair<std::vector<uint8_t>, size_t> readLZOCompressed(std::istream& is, size_t expectedSize);
     template<typename T>
     std::pair<std::vector<T>, size_t> readLZOCompressed(std::istream& is, size_t expectedSize);
+    
+    std::vector<uint8_t> readCompressed(std::istream& is, size_t expectedSize, bool useCompressionFlag);
+
+    template<typename T>
+    std::vector<T> readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag);
+
+    template<typename T>
+    std::vector<T> readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag, size_t arrSize);
 
     // Write
     template<typename T>

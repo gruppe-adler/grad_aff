@@ -105,7 +105,7 @@ endif()
 include_directories(${Boost_INCLUDE_DIRS}) 
 include_directories("include")
 
-add_library (grad_aff ${LIB_TYPE} "src/grad_aff.cpp" "src/paa/Paa.cpp" "src/StreamUtil.cpp" "src/GridBlockTree.cpp" "src/a3lzo.cpp" "src/pbo/Pbo.cpp" "src/rap/rap.cpp" "src/rap/RapParser.cpp" "src/wrp/wrp.cpp")
+add_library (grad_aff ${LIB_TYPE} "src/grad_aff.cpp" "src/p3d/odol.cpp" "src/paa/Paa.cpp" "src/StreamUtil.cpp" "src/GridBlockTree.cpp" "src/a3lzo.cpp" "src/pbo/Pbo.cpp" "src/rap/rap.cpp" "src/rap/RapParser.cpp" "src/wrp/wrp.cpp")
 target_compile_definitions (grad_aff PUBLIC GRAD_AFF_EXPORTS)
 if(MSVC)
     if(USE_STATIC_LINKING)
