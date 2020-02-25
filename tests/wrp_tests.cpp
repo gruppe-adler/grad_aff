@@ -13,12 +13,12 @@ TEST_CASE("empty wrp read", "[empty-wrp--read]") {
 }
 
 TEST_CASE("read takis", "[read-takis]") {
-    grad_aff::Wrp test_wrp_obj("takistan.wrp");
+    grad_aff::Wrp test_wrp_obj("stratis.wrp");
     REQUIRE_NOTHROW(test_wrp_obj.readWrp());
 }
 
 TEST_CASE("read Altis", "[read-altis]") {
-    grad_aff::Wrp test_wrp_obj("stratis.wrp");
+    grad_aff::Wrp test_wrp_obj("Altis.wrp");
     REQUIRE_NOTHROW(test_wrp_obj.readWrp());
 }
 

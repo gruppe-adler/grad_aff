@@ -125,7 +125,7 @@ void grad_aff::Wrp::readWrp()
     this->maxObjectId = readBytes<uint32_t>(*is);
     this->sizeOfRoadNets = readBytes<uint32_t>(*is);
 
-    this->roadNets = std::vector<RoadNet>(layerSize);
+    this->roadNets = std::vector<RoadNet>();// layerSize);
 
     for (size_t i = 0; i < layerSize; i++) {
         RoadNet roadNet;
