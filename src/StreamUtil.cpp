@@ -153,6 +153,8 @@ template std::pair<std::vector<uint32_t>, size_t> grad_aff::readLZOCompressed(st
 
 
 std::vector<uint8_t> grad_aff::readCompressed(std::istream& is, size_t expectedSize, bool useCompressionFlag) {
+    if (expectedSize == 0)
+        return {};
     bool flag = expectedSize >= 1024;
     if (useCompressionFlag) {
         flag = readBytes<bool>(is);

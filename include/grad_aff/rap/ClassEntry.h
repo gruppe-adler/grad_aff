@@ -5,6 +5,7 @@
 #include <vector>
 #include <ostream>
 #include <memory>
+#include <cmath>
 
 struct ClassEntry {
     uint8_t type;

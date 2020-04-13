@@ -84,6 +84,7 @@ namespace grad_aff::RapParser2
             std::string str = in.string();
 
             state.pop_back();
+            state.back()->type = 2;
 
             auto lastEntryName = state.back()->name;
             auto rapArr = std::make_shared<RapArray>();
@@ -205,7 +206,7 @@ namespace grad_aff::RapParser2
                 rapVal->subType = 1;
             }
             else {
-                rapVal->value = std::stol(dec);
+                rapVal->value = std::stoi(dec);
                 rapVal->type = 1;
                 rapVal->subType = 2;
             }

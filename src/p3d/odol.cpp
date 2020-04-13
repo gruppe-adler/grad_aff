@@ -60,13 +60,13 @@ void grad_aff::Odol::readOdol(bool withLods) {
     }
 
     auto useDefaultFalseCount = 0;
-    for (auto& useDefaultVal : useDefault) {
+    for (auto useDefaultVal : useDefault) {
         if (!useDefaultVal)
             useDefaultFalseCount++;
     }
 
     std::vector<FaceData> faceDefaults = {};
-    for (auto& useDefaultVal : useDefault) {
+    for (auto useDefaultVal : useDefault) {
         FaceData faceData;
 
         if (useDefaultVal) {
@@ -685,7 +685,7 @@ ODOLv4xLod grad_aff::Odol::readLod() {
         */
         lodNamedSelection.nTextureWeights = readBytes<uint32_t>(*is);
         //lodNamedSelection.verticesWeights = readLZOCompressed<uint8_t>(*is, lodNamedSelection.nTextureWeights).first;
-        lodNamedSelection.verticesWeights = readCompressed(*is, lodNamedSelection.nTextureWeights, false);
+        lodNamedSelection.verticesWeights = readCompressed(*is, lodNamedSelection.nTextureWeights, true);
 
         lod.namedSelections.push_back(lodNamedSelection);
     }
@@ -721,7 +721,8 @@ ODOLv4xLod grad_aff::Odol::readLod() {
             }
         }
         else {
-            auto uncompressed = readLZOCompressed<uint32_t>(*is, (size_t)lod.nClipFlags * 4).first;
+            //auto uncompressed = readLZOCompressed<uint32_t>(*is, (size_t)lod.nClipFlags * 4).first;
+            auto uncompressed = readCompressed(*is, (size_t)lod.nClipFlags * 4, true);
             for (auto& flag : uncompressed) {
                 lod.clipFlags.push_back((ClipFlag)flag);
             }
@@ -753,6 +754,11 @@ ODOLv4xLod grad_aff::Odol::readLod() {
             vertices.push_back(readBytes<float_t>(*is));
         }
     }
+
+    for (auto i = 0; i < vertices.size(); i+= 3) {
+        lod.lodPoints.push_back({ vertices[i], vertices[i + 1], vertices[i + 2] });
+    }
+
     return lod;
     for (auto i = 0; i < vertices.size(); i += 3) {
         VertProperty vertProperty;

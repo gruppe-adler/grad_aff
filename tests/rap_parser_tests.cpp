@@ -1,7 +1,6 @@
-#pragma once
+#define CATCH_CONFIG_MAIN
 
 #include <catch2/catch.hpp>
-
 
 #include <tao/pegtl/contrib/parse_tree.hpp>
 

@@ -225,6 +225,11 @@ void grad_aff::Rap::preprocess(std::string& input) {
         com = input.find("//");
     }
 
+    // Do this properly one day
+    boost::replace_all(input, " true", "1");
+    boost::replace_all(input, "=true", "=1");
+    boost::replace_all(input, " false", "0");
+    boost::replace_all(input, "=false", "=0");
 
 }
 

@@ -5,9 +5,9 @@
 
 struct LodNamedSelection {
     std::string selectedName = "";
-    uint32_t nFaces;
+    uint32_t nFaces = 0;
     std::vector<uint16_t> faceIndexes = {};
-    uint32_t alwaysZero;
+    uint32_t alwaysZero = -1;
     //std::vector
 
     bool isSectional = false;

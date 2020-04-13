@@ -269,8 +269,9 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
         taggMax.data.push_back(0xFF);
     taggMax.dataLength = taggMax.data.size();
     taggs.push_back(taggMax);
-
-
+    
+    std::cout << "trans" << this->hasTransparency << std::endl;
+    std::cout << "avg alpha " << averageAlpha << std::endl;
     // Write Transparency Flag Tagg
     if (averageAlpha != 255) {
         hasTransparency = true;
@@ -282,6 +283,10 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
         taggFlag.dataLength = taggFlag.data.size();
         taggs.push_back(taggFlag);
     }
+    else {
+        hasTransparency = false;
+    }
+    std::cout << "trans" << this->hasTransparency << std::endl;
 }
 
 void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {

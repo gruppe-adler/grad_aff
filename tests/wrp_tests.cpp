@@ -1,4 +1,4 @@
-#pragma once
+#define CATCH_CONFIG_MAIN
 
 #include <catch2/catch.hpp>
 
@@ -7,14 +7,16 @@
 #include <fstream>
 #include <vector>
 
-TEST_CASE("empty wrp read", "[empty-wrp--read]") {
-    grad_aff::Wrp test_wrp_obj("");
-    REQUIRE_THROWS_WITH(test_wrp_obj.readWrp(), "Invalid file!");
-}
 
-TEST_CASE("read takis", "[read-takis]") {
-    grad_aff::Wrp test_wrp_obj("stratis.wrp");
+
+TEST_CASE("read stratis", "[read-stratis]") {
+    grad_aff::Wrp test_wrp_obj("Tembelan.wrp");
     REQUIRE_NOTHROW(test_wrp_obj.readWrp());
+
+    for (auto& s : test_wrp_obj.compressedBytes3) {
+        if (s != 0)
+            std::cout << "Hit" << std::endl;
+    }
 }
 
 TEST_CASE("read takis", "[read-takis]") {
@@ -22,7 +24,10 @@ TEST_CASE("read takis", "[read-takis]") {
     REQUIRE_NOTHROW(test_wrp_obj.readWrp());
 }
 
-
+TEST_CASE("empty wrp read", "[empty-wrp--read]") {
+    grad_aff::Wrp test_wrp_obj("");
+    REQUIRE_THROWS_WITH(test_wrp_obj.readWrp(), "Invalid file!");
+}
 
 
 TEST_CASE("read Altis in memory", "[read-altis-memory]") {
