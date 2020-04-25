@@ -37,4 +37,5 @@
 out/
 lib/
 test_data/
-CMakeSettings.json
+CMakeSettings.json#
+build/

@@ -18,6 +18,7 @@
 #include <cassert>
 #include <bitset>
 #include <sstream>
+#include <algorithm>
 
 namespace fs = std::filesystem;
 

@@ -7,9 +7,9 @@
 #include "../grad_aff.h"
 #include "../StreamUtil.h"
 
-#include "MipMap.h"
-#include "Tagg.h"
-#include "Palette.h"
+#include "mipmap.h"
+#include "tagg.h"
+#include "palette.h"
 
 namespace fs = std::filesystem;
 

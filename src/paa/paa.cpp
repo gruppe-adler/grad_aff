@@ -1,4 +1,4 @@
-#include "grad_aff/paa/Paa.h"
+#include "grad_aff/paa/paa.h"
 
 #define SQUISH_USE_OPENMP
 #include <squish.h>
