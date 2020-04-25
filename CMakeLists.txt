@@ -44,6 +44,9 @@ FIND_LIBRARY(LZO2_LIBRARY NAMES lzo2 liblzo2)
 find_path(SQUISH_INCLUDE_DIR squish.h)
 find_library(SQUISH_LIBRARY squish${DEBUG_SUFFIX})
 
+# OpenMp
+find_package(OpenMP REQUIRED)
+
 # Image
 if(BUILD_WITH_OIIO)
     if(MINGW)
@@ -102,14 +105,11 @@ if(BUILD_WITH_OIIO)
         include_directories(${OIIO_INCLUDE_DIR})
     endif()
 endif()
-include_directories(${Boost_INCLUDE_DIRS}) 
+include_directories(${Boost_INCLUDE_DIRS})
 include_directories("include")
 
 file(GLOB_RECURSE GRAD_AFF_HEADERS ${PROJECT_SOURCE_DIR}/include/*.h)
 file(GLOB_RECURSE GRAD_AFF_SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
-message(test)
-message(${GRAD_AFF_HEADERS})
-message(${GRAD_AFF_SOURCES})
 
 add_library (grad_aff ${LIB_TYPE} ${GRAD_AFF_SOURCES} ${GRAD_AFF_HEADERS})# "src/grad_aff.cpp" "src/p3d/odol.cpp" "src/paa/Paa.cpp" "src/StreamUtil.cpp" "src/GridBlockTree.cpp" "src/a3lzo.cpp" "src/pbo/Pbo.cpp" "src/rap/rap.cpp" "src/rap/RapParser.cpp" "src/wrp/wrp.cpp")
 target_compile_definitions (grad_aff PUBLIC GRAD_AFF_EXPORTS)
@@ -127,6 +127,10 @@ if(MSVC)
             target_compile_options(grad_aff PUBLIC "/MD")
         endif()
     endif()
+endif()
+
+if(MSVC AND NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    target_compile_options(grad_aff PUBLIC "/O2")
 endif()
 
 target_include_directories(grad_aff PUBLIC ${PROJECT_SOURCE_DIR}/include)
@@ -153,6 +157,8 @@ target_link_libraries(grad_aff PUBLIC ${SQUISH_LIBRARY})
 target_link_libraries(grad_aff PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(grad_aff PUBLIC taocpp::pegtl)
 target_link_libraries(grad_aff PUBLIC tsl::ordered_map)
+target_link_libraries(grad_aff PUBLIC OpenMP::OpenMP_CXX)
+
 
 if(BUILD_WITH_OPENSSL)
     target_link_libraries(grad_aff PUBLIC OpenSSL::SSL OpenSSL::Crypto)

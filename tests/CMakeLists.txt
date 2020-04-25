@@ -2,10 +2,7 @@
 cmake_minimum_required (VERSION 3.8)
 
 find_package(Catch2 CONFIG REQUIRED)
-
-if(MINGW)
-    find_package(OpenMP REQUIRED)
-endif()
+find_package(OpenMP REQUIRED)
 
 include_directories (${tests_SOURCE_DIR}/include)
 
@@ -31,9 +28,7 @@ target_link_libraries(grad_aff_tests_p3d PRIVATE grad_aff)
 target_link_libraries(grad_aff_tests_paa PRIVATE grad_aff)
 target_link_libraries(grad_aff_tests_rap PRIVATE grad_aff)
 
-if(MINGW)
-    target_link_libraries(grad_aff_tests_wrp PUBLIC OpenMP::OpenMP_CXX)
-    target_link_libraries(grad_aff_tests_p3d PUBLIC OpenMP::OpenMP_CXX)
-    target_link_libraries(grad_aff_tests_paa PUBLIC OpenMP::OpenMP_CXX)
-    target_link_libraries(grad_aff_tests_rap PUBLIC OpenMP::OpenMP_CXX)
-endif()
+target_link_libraries(grad_aff_tests_wrp PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(grad_aff_tests_p3d PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(grad_aff_tests_paa PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(grad_aff_tests_rap PUBLIC OpenMP::OpenMP_CXX)

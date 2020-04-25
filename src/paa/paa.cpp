@@ -1,7 +1,10 @@
 #include "grad_aff/paa/Paa.h"
 
+#define SQUISH_USE_OPENMP
 #include <squish.h>
 #include <lzo/lzo1x.h>
+
+#include "grad_aff/paa/squishMod.h"
 
 #include <boost/gil.hpp>
 #include <boost/gil/extension/numeric/resample.hpp>
@@ -115,7 +118,11 @@ void grad_aff::Paa::readPaa(bool peek) {
 
         if (mipmap.lzoCompressed) {
             if (lzo_init() == LZO_E_OK) {
-                auto lzoUncompressed = std::vector<uint8_t>((size_t)mipmap.dataLength * 4 * 100); // TODO
+                auto uncompressedSize = (size_t)mipmap.width * mipmap.height;
+                if (typeOfPax == TypeOfPaX::DXT1) {
+                    uncompressedSize /= 2;
+                }
+                auto lzoUncompressed = std::vector<uint8_t>(uncompressedSize);
                 lzo_uint out_len;
 
                 if (lzo1x_decompress(reinterpret_cast<const uint8_t*>(mipmap.data.data()), mipmap.dataLength, lzoUncompressed.data(), &out_len, NULL) != LZO_E_OK) {
@@ -253,6 +260,8 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
     averageBlue /= pixelCount;
     averageAlpha /= pixelCount;
     
+    taggs.clear();
+
     // Write average Color Tagg
     Tagg taggAvg;
     taggAvg.signature = "GGATCGVA";
@@ -270,8 +279,6 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
     taggMax.dataLength = taggMax.data.size();
     taggs.push_back(taggMax);
     
-    std::cout << "trans" << this->hasTransparency << std::endl;
-    std::cout << "avg alpha " << averageAlpha << std::endl;
     // Write Transparency Flag Tagg
     if (averageAlpha != 255) {
         hasTransparency = true;
@@ -286,7 +293,6 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
     else {
         hasTransparency = false;
     }
-    std::cout << "trans" << this->hasTransparency << std::endl;
 }
 
 void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
@@ -309,13 +315,13 @@ void grad_aff::Paa::writePaa(std::ostream& os, TypeOfPaX typeOfPaX) {
     if (this->typeOfPax == TypeOfPaX::UNKNOWN) {
         this->typeOfPax = hasTransparency ? TypeOfPaX::DXT5 : TypeOfPaX::DXT1;
     }
-
+    
     if (typeOfPax == TypeOfPaX::DXT5) {
         for (auto& mipmap : encodedMipMaps) {
             auto compressedDataLength = mipmap.dataLength / 4;
             auto compressedData = std::vector<uint8_t>(compressedDataLength);
 
-            squish::CompressImage(reinterpret_cast<const uint8_t*>(mipmap.data.data()), (int)mipmap.width, (int)mipmap.height, compressedData.data(), squish::kDxt5);
+            compressImage(reinterpret_cast<const uint8_t*>(mipmap.data.data()), (int)mipmap.width, (int)mipmap.height, (int)mipmap.width * 4, compressedData.data(), squish::kDxt5);
 
             mipmap.data = compressedData;
             mipmap.dataLength = compressedDataLength;
@@ -327,40 +333,39 @@ void grad_aff::Paa::writePaa(std::ostream& os, TypeOfPaX typeOfPaX) {
             auto compressedDataLength = mipmap.dataLength / 8;
             auto compressedData = std::vector<uint8_t>(compressedDataLength);
 
-            squish::CompressImage(reinterpret_cast<const uint8_t*>(mipmap.data.data()), (int)mipmap.width, (int)mipmap.height, compressedData.data(), squish::kDxt1);
+            compressImage(reinterpret_cast<const uint8_t*>(mipmap.data.data()), (int)mipmap.width, (int)mipmap.height, (int)mipmap.width * 4,compressedData.data(), squish::kDxt1);
 
             mipmap.data = compressedData;
             mipmap.dataLength = compressedDataLength;
         }
         magicNumber = 0xff01;
     }
-    
-    // compress with lzo, if needed
-    if (encodedMipMaps[0].width > 128) {
-        if (lzo_init() == LZO_E_OK) {
-
-            for (int i = 0; i < encodedMipMaps.size() && encodedMipMaps[i].width > 128; i++) {
-                encodedMipMaps[i].lzoCompressed = true;
+   
+    if (lzo_init() == LZO_E_OK) {
+        for(auto& encodedMipMap : encodedMipMaps) {
+            if (encodedMipMap.width > 128) {
+                encodedMipMap.lzoCompressed = true;
 
                 size_t out_len = 0;
-                          
-                std::vector<unsigned char> outputData(encodedMipMaps[i].data.size() * 2);
-                std::vector<unsigned char> workMemory(LZO1X_MEM_COMPRESS);
-                
-                if (lzo1x_1_compress(reinterpret_cast<const uint8_t*>(encodedMipMaps[i].data.data()), encodedMipMaps[i].dataLength, outputData.data(), &out_len, workMemory.data()) != LZO_E_OK) {
+
+                std::vector<unsigned char> outputData(encodedMipMap.data.size() * 2);
+                std::vector<unsigned char> workMemory(LZO1X_999_MEM_COMPRESS);
+
+                if (lzo1x_999_compress(reinterpret_cast<const uint8_t*>(encodedMipMap.data.data()), encodedMipMap.dataLength, outputData.data(), &out_len, workMemory.data()) != LZO_E_OK) {
                     throw std::runtime_error("LZO Compression failed");
                 }
-                
-                encodedMipMaps[i].data = std::vector<uint8_t>(outputData.data(), outputData.data() + out_len);
-                encodedMipMaps[i].dataLength = out_len;
 
-                encodedMipMaps[i].width |= 0x8000;
+                encodedMipMap.data = std::vector<uint8_t>(outputData.data(), outputData.data() + out_len);
+                encodedMipMap.dataLength = out_len;
+
+                encodedMipMap.width |= 0x8000;
             }
         }
-        else {
-            throw std::runtime_error("LZO Init failed!");
-        }
     }
+    else {
+        throw std::runtime_error("LZO Init failed!");
+    }
+   
 
     Tagg taggOffs;
     taggOffs.signature = "GGATSFFO";
@@ -396,7 +401,17 @@ void grad_aff::Paa::writePaa(std::ostream& os, TypeOfPaX typeOfPaX) {
         counter++;
     }
     taggOffs.dataLength = taggOffs.data.size();
-    
+
+    if (taggOffs.dataLength < 64) {
+        while (taggOffs.dataLength < 64) {
+            taggOffs.data.push_back(0x00);
+            taggOffs.data.push_back(0x00);
+            taggOffs.data.push_back(0x00);
+            taggOffs.data.push_back(0x00);
+            taggOffs.dataLength += 4;
+        }
+    }
+
     // Write magic
     writeBytes<uint16_t>(os, magicNumber);
     for (auto& tagg : taggs) {

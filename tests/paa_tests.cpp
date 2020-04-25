@@ -6,12 +6,28 @@
 
 #include "grad_aff/paa/paa.h"
 
-
-TEST_CASE("read uneven png", "[read-uneven-png-write-paa]") {
+TEST_CASE("read/write dxt1 lzo", "[read-write-dxt1-lzo]") {
+    //grad_aff::Paa test_paa_obj("grad_dlc_low_messenger_medic_co.paa");
     grad_aff::Paa test_paa_obj("DXT1_LZO_Test.paa");
+    //grad_aff::Paa test_paa_obj("de_v2.paa");
     REQUIRE_NOTHROW(test_paa_obj.readPaa());
     test_paa_obj.calculateMipmapsAndTaggs();
-    test_paa_obj.writePaa("DXT1_LZO_Test_gil.paa");
+#ifdef SQUISH_USE_OPENMP
+    std::cout << "hji" << std::endl;
+#endif
+    test_paa_obj.writePaa("DXT1_LZO_Test_out.paa");// , grad_aff::Paa::TypeOfPaX::DXT5);
+    //test_paa_obj.writePaa("de_v2_2.paa");
+    //test_paa_obj.writePaa("grad_dlc_low_messenger_medic_co.paa");
+    //grad_aff::Paa test_paa_obj_2("de_v2_2.paa");
+    //REQUIRE_NOTHROW(test_paa_obj_2.readPaa());
+}
+
+TEST_CASE("read/write DXT5", "[read-write-dxt5]") {
+    grad_aff::Paa test_paa_obj("Bundle_Test.paa");
+    REQUIRE_NOTHROW(test_paa_obj.readPaa());
+    test_paa_obj.writePaa("Bundle_Text_out.paa");
+    grad_aff::Paa test_paa_obj_2("Bundle_Text_out.paa");
+    REQUIRE_NOTHROW(test_paa_obj_2.readPaa());
 }
 
 TEST_CASE("empty paa read", "[empty-paa-read]") {
