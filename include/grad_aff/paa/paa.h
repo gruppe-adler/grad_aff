@@ -1,8 +1,11 @@
 #pragma once
 
+#if defined(_MSC_VER)
+    #pragma warning(disable : 4251)
+#endif
+
 #include <iostream>
 #include <sstream>
-#include <filesystem>
 
 #include "../grad_aff.h"
 #include "../StreamUtil.h"
@@ -11,29 +14,11 @@
 #include "tagg.h"
 #include "palette.h"
 
-namespace fs = std::filesystem;
-
-/*
-GRAD_AFF_EXTIMP template class GRAD_AFF_API std::allocator<MipMap>;
-GRAD_AFF_EXTIMP template class GRAD_AFF_API std::allocator<Tagg>;
-GRAD_AFF_EXTIMP template class GRAD_AFF_API std::vector<MipMap>;
-GRAD_AFF_EXTIMP template class GRAD_AFF_API std::vector<Tagg>;
-GRAD_AFF_EXTIMP template class std::_Compressed_pair<std::allocator<Tagg>, std::_Vector_val<std::_Simple_types<Tagg>>, true>;
-*/
-
 namespace grad_aff {
     class GRAD_AFF_API Paa {
-    private:
-        uint16_t magicNumber = 0;
-        Palette palette;
-        size_t averageRed = 0;
-        size_t averageBlue = 0;
-        size_t averageGreen = 0;
-        size_t averageAlpha = 0;
-
-        std::shared_ptr<std::istream> is;
     public:
         enum class TypeOfPaX {
+            UNKNOWN,
             DXT1,
             DXT2,
             DXT3,
@@ -42,30 +27,44 @@ namespace grad_aff {
             RGBA4444,
             RGBA5551,
             RGBA8888,
-            GRAYwAlpha,
-            UNKNOWN
+            GRAYwAlpha
         };
+
+    private:
+        uint16_t magicNumber = 0;
+        Palette palette;
+        size_t averageRed = 0;
+        size_t averageBlue = 0;
+        size_t averageGreen = 0;
+        size_t averageAlpha = 0;
+
+        void readPaa(std::shared_ptr<std::istream> is, bool peek);
+        void writePaa(std::ostream& os, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
+    public:
         bool hasTransparency = false;
-        std::vector<MipMap> mipMaps = {};
-        std::vector<Tagg> taggs = {};
         TypeOfPaX typeOfPax;
 
-        Paa();
-        Paa(std::string filename);
-        Paa(std::vector<uint8_t> data);
-        
-        void readPaa(bool peek = false);
-        void readImage(fs::path filename);
+        std::vector<MipMap> mipMaps = {};
+        std::vector<Tagg> taggs = {};
 
-        std::vector<uint8_t> getRawPixelData(uint8_t level = 0);
-        uint8_t getRawPixelDataAt(size_t x, size_t y, uint8_t level = 0);
+        Paa();
+
+        void readPaa(std::string filename, bool peek = false);
+        void readPaa(std::vector<uint8_t> data, bool peek = false);
+
+        void writePaa(std::string filename, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
 
         void calculateMipmapsAndTaggs();
 
-        void writeImage(std::string filename, int level = 0);
-        void writePaa(std::string filename, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
-        void writePaa(std::ostream& os, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
+        std::vector<uint8_t> getRawPixelData(uint8_t level = 0);
+        std::array<uint8_t, 4> getRawPixelDataAt(size_t x, size_t y, uint8_t level = 0);
+
         void setRawPixelData(std::vector<uint8_t> data, uint8_t level = 0);
-        void setRawPixelDataAt(size_t x, size_t y, uint8_t pixelData, uint8_t level = 0);
+        void setRawPixelDataAt(size_t x, size_t y, std::array<uint8_t, 4> data, uint8_t level = 0);
+
+#ifdef GRAD_AFF_USE_OIIO
+        void readImage(std::string filename);
+        void writeImage(std::string filename, int level = 0);
+#endif
     };
 };

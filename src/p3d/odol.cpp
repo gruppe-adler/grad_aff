@@ -861,10 +861,10 @@ UVSet grad_aff::Odol::readUVSet() {
     uvSet.defaultFill = readBytes<bool>(*is);
     if (uvSet.defaultFill) {
         if (version >= 45) {
-            uvSet.defaultValue = readBytes<uint32_t>(*is);
+            uvSet.defaultValue = readBytes<float_t>(*is);
         }
         else {
-            uvSet.defaultValue = std::make_pair<uint32_t, uint32_t>(readBytes<uint32_t>(*is), readBytes<uint32_t>(*is));
+            uvSet.defaultValue = std::make_pair<float_t, float_t>(readBytes<float_t>(*is), readBytes<float_t>(*is));
         }
         return uvSet;
     }

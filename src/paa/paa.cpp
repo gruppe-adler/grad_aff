@@ -21,21 +21,19 @@ namespace bg = boost::gil;
 using namespace OIIO;
 #endif
 
-
 grad_aff::Paa::Paa() {
-    this->typeOfPax = TypeOfPaX::DXT5;
+    this->typeOfPax = TypeOfPaX::UNKNOWN;
 };
 
-
-grad_aff::Paa::Paa(std::string pboFilename) {
-    this->is = std::make_shared<std::ifstream>(pboFilename, std::ios::binary);
-};
-
-grad_aff::Paa::Paa(std::vector<uint8_t> data) {
-    this->is = std::make_shared<std::stringstream>(std::string(data.begin(), data.end()));
+void grad_aff::Paa::readPaa(std::string filename, bool peek) {
+    readPaa(std::make_shared<std::ifstream>(filename, std::ios::binary), peek);
 }
 
-void grad_aff::Paa::readPaa(bool peek) {
+void grad_aff::Paa::readPaa(std::vector<uint8_t> data, bool peek) {
+    readPaa(std::make_shared<std::stringstream>(std::string(data.begin(), data.end())), peek);
+}
+
+void grad_aff::Paa::readPaa(std::shared_ptr<std::istream> is, bool peek) {
     is->seekg(0);
     magicNumber = readBytes<uint16_t>(*is);
     switch (magicNumber)
@@ -144,7 +142,7 @@ void grad_aff::Paa::readPaa(bool peek) {
             size_t uncompressedSize = (size_t)mipmap.dataLength * 8;
             auto uncompressedData = std::vector<squish::u8>(uncompressedSize);
 
-            squish::DecompressImage(uncompressedData.data(), mipmap.height, mipmap.height, mipmap.data.data(), squish::kDxt1);
+            squish::DecompressImage(uncompressedData.data(), mipmap.width, mipmap.height, mipmap.data.data(), squish::kDxt1);
 
             mipmap.dataLength = uncompressedSize;
             mipmap.data = std::vector<uint8_t>(uncompressedData.data(), uncompressedData.data() + uncompressedSize);
@@ -154,7 +152,7 @@ void grad_aff::Paa::readPaa(bool peek) {
             size_t uncompressedSize = (size_t)mipmap.dataLength * 4;
             auto uncompressedData = std::vector<squish::u8>(uncompressedSize);
 
-            squish::DecompressImage(uncompressedData.data(), (int)mipmap.width, (int)mipmap.height, mipmap.data.data(), squish::kDxt5);
+            squish::DecompressImage(uncompressedData.data(), mipmap.width, mipmap.height, mipmap.data.data(), squish::kDxt5);
 
             mipmap.dataLength = uncompressedSize;
             mipmap.data = std::vector<uint8_t>(uncompressedData.data(), uncompressedData.data() + uncompressedSize);
@@ -164,45 +162,153 @@ void grad_aff::Paa::readPaa(bool peek) {
         mipMaps.push_back(mipmap);
     }
 }
-#ifdef GRAD_AFF_USE_OIIO
-void grad_aff::Paa::readImage(fs::path filename) {
-    auto inImage = ImageBuf(filename.string());
-    inImage.read();
-    mipMaps.clear();
 
-    MipMap mipMap;
-    mipMap.width = inImage.spec().width;
-    mipMap.height = inImage.spec().height;
-    mipMap.data.resize((size_t)mipMap.width * (size_t)mipMap.height * 4);
-    inImage.get_pixels(ROI(0, mipMap.width, 0, mipMap.height), TypeDesc::UINT8, mipMap.data.data());
-    mipMap.dataLength = mipMap.data.size();
-    
-    mipMaps.push_back(mipMap);
-    calculateMipmapsAndTaggs();
+void grad_aff::Paa::writePaa(std::string fileName, TypeOfPaX typeOfPaX) {
+
+    // Write everything
+    std::ofstream os(fileName, std::ios::binary);
+    writePaa(os, typeOfPaX);
+    os.close();
 }
 
-void grad_aff::Paa::writeImage(std::string filename, int level) {
-    if (level >= mipMaps.size()) {
-        std::stringstream exStream;
-        exStream << "Level " << level << " exceeds the mipmap count of " << mipMaps.size();
-        throw std::out_of_range(exStream.str());
+void grad_aff::Paa::writePaa(std::ostream& os, TypeOfPaX typeOfPaX) {
+
+    if (mipMaps.size() <= 1)
+        calculateMipmapsAndTaggs();
+
+    std::vector<MipMap> encodedMipMaps = mipMaps;
+
+    // Compression
+    this->typeOfPax = typeOfPaX;
+    if (this->typeOfPax == TypeOfPaX::UNKNOWN) {
+        this->typeOfPax = hasTransparency ? TypeOfPaX::DXT5 : TypeOfPaX::DXT1;
     }
 
-    int width = mipMaps[level].width;
-    int height = mipMaps[level].height;
+    if (typeOfPax == TypeOfPaX::DXT5) {
+        for (auto& mipmap : encodedMipMaps) {
+            auto compressedDataLength = mipmap.dataLength / 4;
+            auto compressedData = std::vector<uint8_t>(compressedDataLength);
 
-    auto outImage = ImageOutput::create(filename);
-    if (!outImage) {
-        throw std::runtime_error("Couldn't create output image!");
+            compressImage(reinterpret_cast<const uint8_t*>(mipmap.data.data()), (int)mipmap.width, (int)mipmap.height, (int)mipmap.width * 4, compressedData.data(), squish::kDxt5);
+
+            mipmap.data = compressedData;
+            mipmap.dataLength = compressedDataLength;
+        }
+        magicNumber = 0xff05;
+    }
+    else if (typeOfPax == TypeOfPaX::DXT1) {
+        for (auto& mipmap : encodedMipMaps) {
+            auto compressedDataLength = mipmap.dataLength / 8;
+            auto compressedData = std::vector<uint8_t>(compressedDataLength);
+
+            compressImage(reinterpret_cast<const uint8_t*>(mipmap.data.data()), (int)mipmap.width, (int)mipmap.height, (int)mipmap.width * 4, compressedData.data(), squish::kDxt1);
+
+            mipmap.data = compressedData;
+            mipmap.dataLength = compressedDataLength;
+        }
+        magicNumber = 0xff01;
     }
 
-    ImageSpec imgSpec(width, height, 4, TypeDesc::UINT8);
-    outImage->open(filename, imgSpec);
-    outImage->write_image(TypeDesc::UINT8, mipMaps[level].data.data());
-    outImage->close();
-    
+    if (lzo_init() == LZO_E_OK) {
+        for (auto& encodedMipMap : encodedMipMaps) {
+            if (encodedMipMap.width > 128) {
+                encodedMipMap.lzoCompressed = true;
+
+                size_t out_len = 0;
+
+                std::vector<unsigned char> outputData(encodedMipMap.data.size() * 2);
+                std::vector<unsigned char> workMemory(LZO1X_999_MEM_COMPRESS);
+
+                if (lzo1x_999_compress(reinterpret_cast<const uint8_t*>(encodedMipMap.data.data()), encodedMipMap.dataLength, outputData.data(), &out_len, workMemory.data()) != LZO_E_OK) {
+                    throw std::runtime_error("LZO Compression failed");
+                }
+
+                encodedMipMap.data = std::vector<uint8_t>(outputData.data(), outputData.data() + out_len);
+                encodedMipMap.dataLength = out_len;
+
+                encodedMipMap.width |= 0x8000;
+            }
+        }
+    }
+    else {
+        throw std::runtime_error("LZO Init failed!");
+    }
+
+
+    Tagg taggOffs;
+    taggOffs.signature = "GGATSFFO";
+
+
+    uint32_t initalOffset = 0;
+    initalOffset += 2; // magic
+
+    for (auto tagg : taggs) {
+        initalOffset += 8 + 4; // sig + size of length
+        initalOffset += 4; // tagg.dataLength;
+    }
+
+    initalOffset += 8 + 4 + 16 * 4; // sig + size of length + 16 * 4byte
+    initalOffset += 2; // palletteLength
+    if (palette.dataLength > 0) {
+        // TODO:
+    }
+    // initalOffset += 8;
+
+    std::vector<char> offsetAsChars(4);
+    int counter = 0;
+
+    for (auto& mipmap : encodedMipMaps) {
+        offsetAsChars = std::vector<char>(reinterpret_cast<char*>(&initalOffset), reinterpret_cast<char*>(&initalOffset) + 4);
+
+        for (int i = 0; i < 4; i++) {
+            taggOffs.data.push_back(offsetAsChars[i]);
+        }
+
+
+        initalOffset += mipmap.dataLength + 2 * 2 + 3;
+        counter++;
+    }
+    taggOffs.dataLength = taggOffs.data.size();
+
+    if (taggOffs.dataLength < 64) {
+        while (taggOffs.dataLength < 64) {
+            taggOffs.data.push_back(0x00);
+            taggOffs.data.push_back(0x00);
+            taggOffs.data.push_back(0x00);
+            taggOffs.data.push_back(0x00);
+            taggOffs.dataLength += 4;
+        }
+    }
+
+    // Write magic
+    writeBytes<uint16_t>(os, magicNumber);
+    for (auto& tagg : taggs) {
+        writeString(os, tagg.signature);
+        writeBytes<uint32_t>(os, tagg.dataLength);
+        writeBytes(os, tagg.data);
+    }
+
+    // Write offset Tag
+    writeString(os, taggOffs.signature);
+    writeBytes<uint32_t>(os, taggOffs.dataLength);
+    writeBytes(os, taggOffs.data);
+
+    writeBytes<uint16_t>(os, palette.dataLength);
+    if (palette.dataLength > 0) {
+        // TODO:
+    }
+
+    for (auto& mipmap : encodedMipMaps) {
+        writeBytes<uint16_t>(os, mipmap.width);
+        writeBytes<uint16_t>(os, mipmap.height);
+        writeBytesAsArmaUShort(os, mipmap.dataLength);
+        writeBytes(os, mipmap.data);
+    }
+
+    writeBytes<uint16_t>(os, 0x00);
+    writeBytes<uint16_t>(os, 0x00);
+    writeBytes<uint16_t>(os, 0x00);
 }
-#endif
 
 void grad_aff::Paa::calculateMipmapsAndTaggs() {
     auto curWidth = mipMaps[0].width;
@@ -295,153 +401,6 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
     }
 }
 
-void grad_aff::Paa::writePaa(std::string filename, TypeOfPaX typeOfPaX) {
-
-    // Write everything
-    std::ofstream os(filename, std::ios::binary);
-    writePaa(os, typeOfPaX);
-    os.close();
-}
-
-void grad_aff::Paa::writePaa(std::ostream& os, TypeOfPaX typeOfPaX) {
-
-    if (mipMaps.size() <= 1)
-        calculateMipmapsAndTaggs();
-
-    std::vector<MipMap> encodedMipMaps = mipMaps;
-
-    // Compression
-    this->typeOfPax = typeOfPaX;
-    if (this->typeOfPax == TypeOfPaX::UNKNOWN) {
-        this->typeOfPax = hasTransparency ? TypeOfPaX::DXT5 : TypeOfPaX::DXT1;
-    }
-    
-    if (typeOfPax == TypeOfPaX::DXT5) {
-        for (auto& mipmap : encodedMipMaps) {
-            auto compressedDataLength = mipmap.dataLength / 4;
-            auto compressedData = std::vector<uint8_t>(compressedDataLength);
-
-            compressImage(reinterpret_cast<const uint8_t*>(mipmap.data.data()), (int)mipmap.width, (int)mipmap.height, (int)mipmap.width * 4, compressedData.data(), squish::kDxt5);
-
-            mipmap.data = compressedData;
-            mipmap.dataLength = compressedDataLength;
-        }
-        magicNumber = 0xff05;
-    }
-    else if (typeOfPax == TypeOfPaX::DXT1) {
-        for (auto& mipmap : encodedMipMaps) {
-            auto compressedDataLength = mipmap.dataLength / 8;
-            auto compressedData = std::vector<uint8_t>(compressedDataLength);
-
-            compressImage(reinterpret_cast<const uint8_t*>(mipmap.data.data()), (int)mipmap.width, (int)mipmap.height, (int)mipmap.width * 4,compressedData.data(), squish::kDxt1);
-
-            mipmap.data = compressedData;
-            mipmap.dataLength = compressedDataLength;
-        }
-        magicNumber = 0xff01;
-    }
-   
-    if (lzo_init() == LZO_E_OK) {
-        for(auto& encodedMipMap : encodedMipMaps) {
-            if (encodedMipMap.width > 128) {
-                encodedMipMap.lzoCompressed = true;
-
-                size_t out_len = 0;
-
-                std::vector<unsigned char> outputData(encodedMipMap.data.size() * 2);
-                std::vector<unsigned char> workMemory(LZO1X_999_MEM_COMPRESS);
-
-                if (lzo1x_999_compress(reinterpret_cast<const uint8_t*>(encodedMipMap.data.data()), encodedMipMap.dataLength, outputData.data(), &out_len, workMemory.data()) != LZO_E_OK) {
-                    throw std::runtime_error("LZO Compression failed");
-                }
-
-                encodedMipMap.data = std::vector<uint8_t>(outputData.data(), outputData.data() + out_len);
-                encodedMipMap.dataLength = out_len;
-
-                encodedMipMap.width |= 0x8000;
-            }
-        }
-    }
-    else {
-        throw std::runtime_error("LZO Init failed!");
-    }
-   
-
-    Tagg taggOffs;
-    taggOffs.signature = "GGATSFFO";
-
-
-    uint32_t initalOffset = 0;
-    initalOffset += 2; // magic
-
-    for (auto tagg : taggs) {
-        initalOffset += 8 + 4; // sig + size of length
-        initalOffset += 4; // tagg.dataLength;
-    }
-
-    initalOffset += 8 + 4 + 16 * 4; // sig + size of length + 16 * 4byte
-    initalOffset += 2; // palletteLength
-    if (palette.dataLength > 0) {
-        // TODO:
-    }
-    // initalOffset += 8;
-
-    std::vector<char> offsetAsChars(4);
-    int counter = 0;
-
-    for (auto& mipmap : encodedMipMaps) {
-        offsetAsChars = std::vector<char>(reinterpret_cast<char*>(&initalOffset), reinterpret_cast<char*>(&initalOffset) +4);
-
-        for (int i = 0; i < 4; i++) {
-            taggOffs.data.push_back(offsetAsChars[i]);
-        }
-
-
-        initalOffset += mipmap.dataLength + 2 * 2 + 3;
-        counter++;
-    }
-    taggOffs.dataLength = taggOffs.data.size();
-
-    if (taggOffs.dataLength < 64) {
-        while (taggOffs.dataLength < 64) {
-            taggOffs.data.push_back(0x00);
-            taggOffs.data.push_back(0x00);
-            taggOffs.data.push_back(0x00);
-            taggOffs.data.push_back(0x00);
-            taggOffs.dataLength += 4;
-        }
-    }
-
-    // Write magic
-    writeBytes<uint16_t>(os, magicNumber);
-    for (auto& tagg : taggs) {
-        writeString(os, tagg.signature);
-        writeBytes<uint32_t>(os, tagg.dataLength);
-        writeBytes(os, tagg.data);
-    }
-
-    // Write offset Tag
-    writeString(os, taggOffs.signature);
-    writeBytes<uint32_t>(os, taggOffs.dataLength);
-    writeBytes(os, taggOffs.data);
-
-    writeBytes<uint16_t>(os, palette.dataLength);
-    if (palette.dataLength > 0) {
-        // TODO:
-    }
-
-    for (auto& mipmap : encodedMipMaps) {
-        writeBytes<uint16_t>(os, mipmap.width);
-        writeBytes<uint16_t>(os, mipmap.height);
-        writeBytesAsArmaUShort(os, mipmap.dataLength);
-        writeBytes(os, mipmap.data);
-    }
-
-    writeBytes<uint16_t>(os, 0x00);
-    writeBytes<uint16_t>(os, 0x00);
-    writeBytes<uint16_t>(os, 0x00);
-}
-
 std::vector<uint8_t> grad_aff::Paa::getRawPixelData(uint8_t level)
 {
     if (this->mipMaps.size() == 0 || this->mipMaps[0].data.size() == 0) {
@@ -451,19 +410,63 @@ std::vector<uint8_t> grad_aff::Paa::getRawPixelData(uint8_t level)
     }
 };
 
-
-uint8_t grad_aff::Paa::getRawPixelDataAt(size_t x, size_t y, uint8_t level) {
+std::array<uint8_t, 4> grad_aff::Paa::getRawPixelDataAt(size_t x, size_t y, uint8_t level) {
     if (this->mipMaps.size() == 0 || this->mipMaps[0].data.size() == 0) {
         return {};
     }
     else {
-        return this->mipMaps[level].data[x + y * mipMaps[level].width];
+        std::array<uint8_t, 4> result;
+        for (int i = 0; i < 4; i++) {
+            result[i] = this->mipMaps[level].data[x + y * mipMaps[level].width + i];
+        }
+        return result;
     }
 }
 
 void grad_aff::Paa::setRawPixelData(std::vector<uint8_t> data, uint8_t level) {
     this->mipMaps[level].data = data;
 }
-void grad_aff::Paa::setRawPixelDataAt(size_t x, size_t y, uint8_t pixelData, uint8_t level) {
-    this->mipMaps[level].data[x + y * mipMaps[level].width] = pixelData;
+void grad_aff::Paa::setRawPixelDataAt(size_t x, size_t y, std::array<uint8_t, 4> data, uint8_t level) {
+    for (int i = 0; i < 4; i++) {
+        this->mipMaps[level].data[x + y * mipMaps[level].width + i] = data[i];
+    }
 }
+
+#ifdef GRAD_AFF_USE_OIIO
+void grad_aff::Paa::readImage(std::string fileName) {
+    auto inImage = ImageBuf(fileName);
+    inImage.read();
+    mipMaps.clear();
+
+    MipMap mipMap;
+    mipMap.width = inImage.spec().width;
+    mipMap.height = inImage.spec().height;
+    mipMap.data.resize((size_t)mipMap.width * (size_t)mipMap.height * 4);
+    inImage.get_pixels(ROI(0, mipMap.width, 0, mipMap.height), TypeDesc::UINT8, mipMap.data.data());
+    mipMap.dataLength = mipMap.data.size();
+
+    mipMaps.push_back(mipMap);
+    calculateMipmapsAndTaggs();
+}
+
+void grad_aff::Paa::writeImage(std::string filename, int level) {
+    if (level >= mipMaps.size()) {
+        std::stringstream exStream;
+        exStream << "Level " << level << " exceeds the mipmap count of " << mipMaps.size();
+        throw std::out_of_range(exStream.str());
+    }
+
+    int width = mipMaps[level].width;
+    int height = mipMaps[level].height;
+
+    auto outImage = ImageOutput::create(filename);
+    if (!outImage) {
+        throw std::runtime_error("Couldn't create output image!");
+    }
+
+    ImageSpec imgSpec(width, height, 4, TypeDesc::UINT8);
+    outImage->open(filename, imgSpec);
+    outImage->write_image(TypeDesc::UINT8, mipMaps[level].data.data());
+    outImage->close();
+}
+#endif
