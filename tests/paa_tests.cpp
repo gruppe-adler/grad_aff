@@ -13,6 +13,23 @@ TEST_CASE("test 2048x128", "[read-write-2048x128]") {
     test_paa_obj.writePaa("128x2048_out.paa");
 }
 
+TEST_CASE("test set raw pixel at", "[read-write-raw-pixel-set]") {
+    grad_aff::Paa test_paa_obj;
+    test_paa_obj.readPaa("Bundle_Test.paa");
+    test_paa_obj.setRawPixelDataAt(0, 0, {255, 192, 203, 255});
+    test_paa_obj.writePaa("setRawPixelDataAt_out.paa");
+}
+
+TEST_CASE("write buffer to file", "[read-write-buffer]") {
+    grad_aff::Paa test_paa_obj;
+    test_paa_obj.readPaa("Bundle_Test.paa");
+    test_paa_obj.setRawPixelDataAt(0, 0, { 255, 192, 203, 255 });
+    std::ofstream out("Bundle_Test_buffer_out.paa", std::ios::out | std::ios::binary);
+    auto buffer = test_paa_obj.writePaa();
+    out.write(reinterpret_cast<char*>(buffer.data()), buffer.size());
+    out.close();
+}
+
 TEST_CASE("read/write dxt1 lzo", "[read-write-dxt1-lzo]") {
     //grad_aff::Paa test_paa_obj("grad_dlc_low_messenger_medic_co.paa");
     grad_aff::Paa test_paa_obj;

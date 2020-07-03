@@ -171,6 +171,13 @@ void grad_aff::Paa::writePaa(std::string fileName, TypeOfPaX typeOfPaX) {
     os.close();
 }
 
+std::vector<uint8_t> grad_aff::Paa::writePaa(TypeOfPaX typeOfPax) {
+    std::stringstream os;
+    writePaa(os, typeOfPax);
+    auto outputString = os.str();
+    return std::vector<uint8_t>(outputString.data(), outputString.data() + outputString.length());
+}
+
 void grad_aff::Paa::writePaa(std::ostream& os, TypeOfPaX typeOfPaX) {
 
     if (mipMaps.size() <= 1)

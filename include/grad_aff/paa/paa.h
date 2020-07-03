@@ -53,6 +53,7 @@ namespace grad_aff {
         void readPaa(std::vector<uint8_t> data, bool peek = false);
 
         void writePaa(std::string filename, TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
+        std::vector<uint8_t> writePaa(TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
 
         void calculateMipmapsAndTaggs();
 
