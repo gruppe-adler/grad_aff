@@ -6,14 +6,31 @@
 
 
 TEST_CASE("read test", "[read-test]") {
-    grad_aff::Odol test_odol_obj("Bridge_01_F.p3d");
+    //grad_aff::Odol test_odol_obj("Bridge_01_F.p3d");
     //grad_aff::Odol test_odol_obj("UWreck_Mv22_F.p3d");
     //grad_aff::Odol test_odol_obj("HistoricalPlaneWreck_02_wing_left_F.p3d");
     //grad_aff::Odol test_odol_obj("invisibleRoadway_square_F.p3d");
     //grad_aff::Odol test_odol_obj("Track_01_bumper_F.p3d");
-    //grad_aff::Odol test_odol_obj("TentHangar_V1_F.p3d");
+    grad_aff::Odol test_odol_obj("TentHangar_V1_F.p3d");
     REQUIRE_NOTHROW(test_odol_obj.readOdol());
 }
+
+TEST_CASE("read test mv22", "[read-test-mv22]") {
+    grad_aff::Odol test_odol_obj("UWreck_Mv22_F.p3d");
+    REQUIRE_NOTHROW(test_odol_obj.readOdol());
+}
+
+
+TEST_CASE("read test bridge", "[read-test-bridge]") {
+    grad_aff::Odol test_odol_obj("Bridge_01_F.p3d");
+    REQUIRE_NOTHROW(test_odol_obj.readOdol());
+}
+
+TEST_CASE("read test planewreck", "[read-test-planewreck]") {
+    grad_aff::Odol test_odol_obj("HistoricalPlaneWreck_02_wing_left_F.p3d");
+    REQUIRE_NOTHROW(test_odol_obj.readOdol());
+}
+
 
 
 TEST_CASE("read odol chapel", "[read-odol-chapel]") {

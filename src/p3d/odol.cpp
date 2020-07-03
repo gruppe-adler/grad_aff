@@ -219,7 +219,7 @@ void grad_aff::Odol::readModelInfo(bool peekLodType) {
     modelInfo.mapType = readBytes<uint8_t>(*is);
 
     modelInfo.nFloats = readBytes<uint32_t>(*is);
-    modelInfo.unknownFloats = readLZOCompressed<float_t>(*is, (size_t)modelInfo.nFloats * 4).first; // massArray?
+    modelInfo.unknownFloats = readCompressedArray<float_t>(*is, 4, useCompression, modelInfo.nFloats); // mass array?
 
     modelInfo.mass = readBytes<float_t>(*is);
     modelInfo.invMass = readBytes<float_t>(*is);

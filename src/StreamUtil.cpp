@@ -201,6 +201,7 @@ std::vector<T> grad_aff::readCompressedArray(std::istream& is, size_t expectedSi
     return retVec;
 }
 template std::vector<uint32_t> grad_aff::readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag, size_t arrSize);
+template std::vector<float_t> grad_aff::readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag, size_t arrSize);
 
 /*
     Write
