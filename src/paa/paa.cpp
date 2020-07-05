@@ -89,7 +89,7 @@ void grad_aff::Paa::readPaa(std::shared_ptr<std::istream> is, bool peek) {
     if (palette.dataLength > 0) {
         palette.data = readBytes(*is, palette.dataLength);
     }
-    
+
     // MipMaps
     while (peekBytes<uint16_t>(*is) != 0) {
         MipMap mipmap;
@@ -372,7 +372,7 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
     averageGreen /= pixelCount;
     averageBlue /= pixelCount;
     averageAlpha /= pixelCount;
-    
+
     taggs.clear();
 
     // Write average Color Tagg
@@ -391,7 +391,7 @@ void grad_aff::Paa::calculateMipmapsAndTaggs() {
         taggMax.data.push_back(0xFF);
     taggMax.dataLength = taggMax.data.size();
     taggs.push_back(taggMax);
-    
+
     // Write Transparency Flag Tagg
     if (averageAlpha != 255) {
         hasTransparency = true;
@@ -437,6 +437,17 @@ void grad_aff::Paa::setRawPixelDataAt(size_t x, size_t y, std::array<uint8_t, 4>
     for (int i = 0; i < 4; i++) {
         this->mipMaps[level].data[x + y * mipMaps[level].width + i] = data[i];
     }
+}
+
+void grad_aff::Paa::setMipMaps(std::vector<MipMap> mipMaps) {
+    this->mipMaps = mipMaps;
+}
+std::vector<MipMap> grad_aff::Paa::getMipMaps() const {
+    return this->mipMaps;
+}
+
+bool grad_aff::Paa::getHasTransparency() const {
+    return this->hasTransparency;
 }
 
 #ifdef GRAD_AFF_USE_OIIO

@@ -63,6 +63,11 @@ namespace grad_aff {
         void setRawPixelData(std::vector<uint8_t> data, uint8_t level = 0);
         void setRawPixelDataAt(size_t x, size_t y, std::array<uint8_t, 4> data, uint8_t level = 0);
 
+        void setMipMaps(std::vector<MipMap> mipMaps);
+        std::vector<MipMap> getMipMaps() const;
+
+        bool getHasTransparency() const;
+
 #ifdef GRAD_AFF_USE_OIIO
         void readImage(std::string filename);
         void writeImage(std::string filename, int level = 0);
