@@ -23,10 +23,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **/
 
-#pragma once 
+#pragma once
 
 #include <squish.h>
+
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 
 #include <cstdint>
 
