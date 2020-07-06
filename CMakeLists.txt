@@ -10,9 +10,8 @@ option(USE_STATIC_LINKING "Static Build" ON)
 option(BUILD_TESTS "Build Tests" ON)
 option(BUILD_WITH_OIIO "Build with OpenImageIO" ON)
 option(BUILD_WITH_OPENSSL "Build with OpenSSL" ON)
-option(USE_OPENMP "Use OpenMP" ON)
 
-if(NOT DEFINED CMAKE_BUILD_TYPE OR NOT DEFINED ${CMAKE_BUILD_TYPE})
+if(NOT DEFINED CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
@@ -48,12 +47,6 @@ FIND_LIBRARY(LZO2_LIBRARY NAMES lzo2 liblzo2)
 # DXT
 find_path(SQUISH_INCLUDE_DIR squish.h)
 find_library(SQUISH_LIBRARY squish${DEBUG_SUFFIX})
-
-# OpenMp
-if(USE_OPENMP)
-    find_package(OpenMP REQUIRED)
-    add_definitions(-DUSE_OPENMP)
-endif()
 
 # Image
 if(BUILD_WITH_OIIO)
@@ -165,10 +158,6 @@ target_link_libraries(grad_aff PUBLIC ${SQUISH_LIBRARY})
 target_link_libraries(grad_aff PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(grad_aff PUBLIC taocpp::pegtl)
 target_link_libraries(grad_aff PUBLIC tsl::ordered_map)
-
-if(USE_OPENMP)
-    target_link_libraries(grad_aff PUBLIC OpenMP::OpenMP_CXX)
-endif()
 
 if(BUILD_WITH_OPENSSL)
     target_link_libraries(grad_aff PUBLIC OpenSSL::SSL OpenSSL::Crypto)

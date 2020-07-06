@@ -27,10 +27,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <squish.h>
 
-#ifdef USE_OPENMP
-#include <omp.h>
-#endif
-
+#include <execution>
 #include <cstdint>
 
 static int fixFlags(int flags)
@@ -66,8 +63,13 @@ static void compressImage(uint8_t const* rgba, int width, int height, int pitch,
 {
     flags = fixFlags(flags);
 
-    #pragma omp parallel for
-    for (int y = 0; y < height; y += 4)
+    std::vector<size_t> indexIterator;
+    indexIterator.reserve(height / 4);
+    for (size_t i = 0; i < height; i += 4) {
+        indexIterator.push_back(i);
+    }
+
+    std::for_each(std::execution::par, indexIterator.begin(), indexIterator.end(), [blocks, flags, width, height, rgba, pitch](size_t y)
     {
         squish::u8* targetBlock = reinterpret_cast<squish::u8*>(blocks);
         int bytesPerBlock = ((flags & (squish::kDxt1 | squish::kBc4)) != 0) ? 8 : 16;
@@ -98,5 +100,5 @@ static void compressImage(uint8_t const* rgba, int width, int height, int pitch,
             squish::CompressMasked(sourceRgba, mask, targetBlock, flags, 0);
             targetBlock += bytesPerBlock;
         }
-    }
+    });
 }

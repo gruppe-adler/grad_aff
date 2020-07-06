@@ -1,6 +1,5 @@
 #include "grad_aff/paa/paa.h"
 
-#define SQUISH_USE_OPENMP
 #include <squish.h>
 #include <lzo/lzo1x.h>
 

@@ -20,6 +20,25 @@ TEST_CASE("test set raw pixel at", "[read-write-raw-pixel-set]") {
     test_paa_obj.writePaa("setRawPixelDataAt_out.paa");
 }
 
+TEST_CASE("read paa from buffer", "[read-paa-from-buffer]") {
+    std::ifstream ifs("Bundle_Test.paa", std::ios::binary);
+    std::vector<uint8_t> data;
+    CHECK(!ifs.eof());
+    CHECK(!ifs.fail());
+
+    ifs.seekg(0, std::ios_base::end);
+    std::streampos fileSize = ifs.tellg();
+    data.resize(fileSize);
+
+    ifs.seekg(0, std::ios_base::beg);
+    ifs.read(reinterpret_cast<char*>(&data[0]), fileSize);
+
+    grad_aff::Paa test_paa_obj;
+    test_paa_obj.readPaa(data);
+    test_paa_obj.writePaa("Bundle_Test_from_buffer_out.paa");
+
+}
+
 TEST_CASE("write buffer to file", "[read-write-buffer]") {
     grad_aff::Paa test_paa_obj;
     test_paa_obj.readPaa("Bundle_Test.paa");
