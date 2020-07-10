@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 #include "../grad_aff.h"
 #include "../StreamUtil.h"

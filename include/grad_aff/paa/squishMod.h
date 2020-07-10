@@ -28,8 +28,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <squish.h>
 #include <cstdint>
 
-//#define GRAD_AFF_USE_CPP11_THREADS
-
+#include <algorithm>
 #ifdef GRAD_AFF_USE_CPP11_THREADS
     #include <thread>
 #elif defined GRAD_AFF_USE_CPP17_PARALLELISM
