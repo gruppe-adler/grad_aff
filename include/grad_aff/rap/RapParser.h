@@ -240,7 +240,7 @@ namespace grad_aff::RapParser2
                 value = std::stof(dec);
             }
             else {
-                value = std::stol(dec);
+                value = std::stoi(dec);
             }
             arr->arrayElements.push_back(value);
         }
