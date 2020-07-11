@@ -28,11 +28,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <squish.h>
 #include <cstdint>
 
-#include <algorithm>
-#ifdef GRAD_AFF_USE_CPP11_THREADS
-    #include <thread>
-#elif defined GRAD_AFF_USE_CPP17_PARALLELISM
+
+#ifdef GRAD_AFF_USE_CPP17_PARALLELISM
     #include <execution>
+    #include <algorithm>
+#elif defined GRAD_AFF_USE_CPP11_THREADS
+    #include <thread>
+    #include <algorithm>
+#elif defined GRAD_AFF_USE_OPENMP
+    #include <omp.h>
 #endif
 
 
@@ -190,7 +194,10 @@ static void compressImage(uint8_t const* rgba, int width, int height, int pitch,
 {
     flags = fixFlags(flags);
 
-    for (size_t y = 0; y < height; y += 4)
+#ifdef GRAD_AFF_USE_OPENMP
+    #pragma omp parallel for
+#endif
+    for (int y = 0; y < height; y += 4)
     {
         squish::u8* targetBlock = reinterpret_cast<squish::u8*>(blocks);
         int bytesPerBlock = ((flags & (squish::kDxt1 | squish::kBc4)) != 0) ? 8 : 16;
