@@ -6,6 +6,16 @@
 
 #include <fstream>
 #include <vector>
+//
+//TEST_CASE("read chern winter", "[read-chern-winter]") {
+//    grad_aff::Wrp test_wrp_obj("chernarus_winter.wrp");
+//    REQUIRE_NOTHROW(test_wrp_obj.readWrp());
+//}
+
+TEST_CASE("read chern summer", "[read-chern-summer]") {
+    grad_aff::Wrp test_wrp_obj("chernarus_summer.wrp");
+    REQUIRE_NOTHROW(test_wrp_obj.readWrp());
+}
 
 
 

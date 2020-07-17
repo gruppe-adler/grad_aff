@@ -13,6 +13,7 @@ grad_aff::Wrp::Wrp(std::vector<uint8_t> data) {
 
 std::shared_ptr<grad_aff::GridBlockTree> grad_aff::Wrp::readABPair(std::istream& ifs, size_t dataSize) {
     std::vector<uint8_t> data;
+    data.reserve(dataSize);
     for (size_t i = 0; i < dataSize; i++) {
         data.push_back(readBytes<uint8_t>(ifs));
     }

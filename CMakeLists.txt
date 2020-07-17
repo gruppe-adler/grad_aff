@@ -10,8 +10,8 @@ include(CheckIncludeFileCXX)
 
 option(USE_STATIC_LINKING "Static Build" ON)
 option(BUILD_TESTS "Build Tests" ON)
-option(BUILD_WITH_OIIO "Build with OpenImageIO" ON)
-option(BUILD_WITH_OPENSSL "Build with OpenSSL" ON)
+option(BUILD_WITH_OIIO "Build with OpenImageIO" OFF)
+option(BUILD_WITH_OPENSSL "Build with OpenSSL" OFF)
 option(GRAD_AFF_ENABLE_PARALLELISM "Enable Parallelism" ON)
 
 if(NOT DEFINED CMAKE_BUILD_TYPE OR "${CMAKE_BUILD_TYPE}" STREQUAL "")
@@ -53,6 +53,20 @@ find_library(SQUISH_LIBRARY squish${DEBUG_SUFFIX})
 
 # Image
 if(BUILD_WITH_OIIO)
+   
+   # Let OIIO find external libsquish
+    set (LIBSQUISH_INCLUDES ${SQUISH_INCLUDE_DIR})
+    set (LIBSQUISH_LIBRARIES ${SQUISH_LIBRARY})
+
+    if (NOT TARGET Libsquish::Libsquish)
+        add_library(Libsquish::Libsquish UNKNOWN IMPORTED)
+        set_target_properties(Libsquish::Libsquish PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${LIBSQUISH_INCLUDES}")
+
+        set_property(TARGET Libsquish::Libsquish APPEND PROPERTY
+            IMPORTED_LOCATION "${LIBSQUISH_LIBRARIES}")
+    endif ()
+
     if(MINGW)
         find_package(PkgConfig REQUIRED)
         pkg_check_modules(OIIO_PKG REQUIRED IMPORTED_TARGET OpenImageIO)
@@ -68,6 +82,7 @@ if(BUILD_WITH_OIIO)
         find_package(OpenImageIO CONFIG REQUIRED)
     endif()
 endif()
+
 # Parsing
 find_package(pegtl CONFIG REQUIRED)
 
