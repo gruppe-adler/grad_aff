@@ -13,7 +13,7 @@
 //}
 
 TEST_CASE("read chern summer", "[read-chern-summer]") {
-    grad_aff::Wrp test_wrp_obj("chernarus_summer.wrp");
+    grad_aff::Wrp test_wrp_obj("tem_cham.wrp");
     REQUIRE_NOTHROW(test_wrp_obj.readWrp());
 }
 

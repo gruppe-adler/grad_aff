@@ -267,7 +267,7 @@ void grad_aff::Wrp::readWrp()
         }
         else {
             std::stringstream errorString;
-            errorString << "Unkown infoType " << infoType << " encounterd at " << is->tellg() << " in " << this->wrpName << ". Please report this error at: ";
+            errorString << "Unkown infoType " << infoType << " encounterd at " << is->tellg() << " in " << this->wrpName << ". Please report this error at: https://github.com/gruppe-adler/grad_aff/issues";
             throw std::runtime_error(errorString.str());
         }
     }

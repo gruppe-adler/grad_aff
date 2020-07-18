@@ -31,7 +31,7 @@ namespace grad_aff {
         std::shared_ptr<GridBlockTree> readABPacket(std::istream& ifs, size_t dataSize);
         std::shared_ptr<GridBlockTree> readABPair(std::istream& ifs, size_t dataSize);
     public:        
-        const std::array<uint8_t, 15> infoTypes1 = { 0, 1, 2, 10, 11, 13, 14, 15, 16, 17, 22, 23, 26, 27, 30 };
+        const std::array<uint8_t, 16> infoTypes1 = { 0, 1, 2, 10, 11, 12, 13, 14, 15, 16, 17, 22, 23, 26, 27, 30 }; // 12 (cham)
         const std::array<uint8_t, 3> infoType2 = { 24, 31, 32 };
         const std::array<uint8_t, 5> infoTypes3 = { 25, 33, 41, 42, 43 }; // 41, 42, 43 (stratis)
         const std::array<uint8_t, 14> infoTypes4 = { 3, 4, 8, 9, 18, 19, 20, 21, 28, 29, 36, 37, 38, 39 }; // 36 (malden), 37,38 (altis), 39 (stratis) no doc
