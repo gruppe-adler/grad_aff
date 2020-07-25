@@ -225,6 +225,16 @@ void grad_aff::Rap::preprocess(std::string& input) {
         com = input.find("//");
     }
 
+    auto multiCom = input.find("/*");
+
+    while (multiCom != input.npos) {
+        auto endCom = input.find("*/", multiCom);
+
+        input.erase(multiCom, endCom - multiCom + 2);
+
+        multiCom = input.find("/*");
+    }
+
     // Do this properly one day
     boost::replace_all(input, " true", "1");
     boost::replace_all(input, "=true", "=1");

@@ -7,6 +7,12 @@
 #include <fstream>
 #include <vector>
 
+TEST_CASE("parse enoch roadslib", "[parse-enoch-roadslib]") {
+    grad_aff::Rap test_rap_obj;
+    test_rap_obj.parseConfig("roadslib_enoch.cfg");
+}
+
+
 TEST_CASE("parse with array", "[parse-array-simple-config]") {
     grad_aff::Rap test_rap_obj;
     test_rap_obj.parseConfig("roadslibArray.cfg");
