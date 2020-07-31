@@ -44,8 +44,7 @@ else()
 endif()
 
 # LZO
-FIND_PATH(LZO2_INCLUDE_DIR lzo/lzoconf.h)
-FIND_LIBRARY(LZO2_LIBRARY NAMES lzo2 liblzo2)
+find_package(lzokay CONFIG REQUIRED)
 
 # DXT
 find_path(SQUISH_INCLUDE_DIR squish.h)
@@ -111,7 +110,6 @@ find_package(Boost 1.70.0 COMPONENTS)
 
 find_package(tsl-ordered-map CONFIG REQUIRED)
 
-include_directories(${LZO2_INCLUDE_DIR})
 include_directories(${SQUISH_INCLUDE_DIR})
 if(BUILD_WITH_OIIO)
     if(MINGW)
@@ -154,6 +152,7 @@ endif()
 
 target_include_directories(grad_aff PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(grad_aff PUBLIC ${OPENIMAGEIO_INCLUDE_DIR})
+
 if(BUILD_WITH_OIIO)
     if(MINGW)
         if(USE_STATIC_LINKING)
@@ -171,11 +170,11 @@ if(BUILD_WITH_OIIO)
         target_link_libraries(grad_aff PUBLIC OpenImageIO::OpenImageIO OpenImageIO::OpenImageIO_Util)
     endif()
 endif()
-target_link_libraries(grad_aff PUBLIC ${LZO2_LIBRARY})
 target_link_libraries(grad_aff PUBLIC ${SQUISH_LIBRARY})
 target_link_libraries(grad_aff PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(grad_aff PUBLIC taocpp::pegtl)
 target_link_libraries(grad_aff PUBLIC tsl::ordered_map)
+target_link_libraries(grad_aff PUBLIC lzokay::lzokay)
 
 if(GRAD_AFF_ENABLE_PARALLELISM)
     # Check for CPP 17 Parallelism

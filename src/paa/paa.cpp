@@ -1,7 +1,7 @@
 #include "grad_aff/paa/paa.h"
 
 #include <squish.h>
-#include <lzo/lzo1x.h>
+#include <lzokay.hpp>
 
 #include "grad_aff/paa/squishMod.h"
 
@@ -114,25 +114,22 @@ void grad_aff::Paa::readPaa(std::shared_ptr<std::istream> is, bool peek) {
         }
 
         if (mipmap.lzoCompressed) {
-            if (lzo_init() == LZO_E_OK) {
-                auto uncompressedSize = (size_t)mipmap.width * mipmap.height;
-                if (typeOfPax == TypeOfPaX::DXT1) {
-                    uncompressedSize /= 2;
-                }
-                auto lzoUncompressed = std::vector<uint8_t>(uncompressedSize);
-                lzo_uint out_len;
-
-                if (lzo1x_decompress(reinterpret_cast<const uint8_t*>(mipmap.data.data()), mipmap.dataLength, lzoUncompressed.data(), &out_len, NULL) != LZO_E_OK) {
-                    throw std::runtime_error("LZO Decompression failed");
-                };
-
-                mipmap.data = std::vector<uint8_t>(lzoUncompressed.data(), lzoUncompressed.data() + out_len);
-                mipmap.dataLength = out_len;
-                mipmap.data.resize(mipmap.dataLength);
+            auto uncompressedSize = (size_t)mipmap.width * mipmap.height;
+            if (typeOfPax == TypeOfPaX::DXT1) {
+                uncompressedSize /= 2;
             }
-            else {
-                throw std::runtime_error("LZO Init failed!");
+            auto lzoUncompressed = std::vector<uint8_t>(uncompressedSize);
+
+            size_t decompressedSize = 0;
+            auto error = lzokay::decompress(mipmap.data.data(), mipmap.dataLength, lzoUncompressed.data(), lzoUncompressed.size(), decompressedSize);
+
+            if (error != lzokay::EResult::Success) {
+                throw std::runtime_error("LZO Decompression failed");
             }
+
+            mipmap.data = std::vector<uint8_t>(lzoUncompressed.data(), lzoUncompressed.data() + decompressedSize);
+            mipmap.dataLength = decompressedSize;
+            mipmap.data.resize(mipmap.dataLength);
         }
 
         // decompress
@@ -163,7 +160,6 @@ void grad_aff::Paa::readPaa(std::shared_ptr<std::istream> is, bool peek) {
 }
 
 void grad_aff::Paa::writePaa(std::string fileName, TypeOfPaX typeOfPaX) {
-
     // Write everything
     std::ofstream os(fileName, std::ios::binary);
     writePaa(os, typeOfPaX);
@@ -215,31 +211,27 @@ void grad_aff::Paa::writePaa(std::ostream& os, TypeOfPaX typeOfPaX) {
         magicNumber = 0xff01;
     }
 
-    if (lzo_init() == LZO_E_OK) {
-        for (auto& encodedMipMap : encodedMipMaps) {
-            if (encodedMipMap.width > 128) {
-                encodedMipMap.lzoCompressed = true;
+    lzokay::Dict<> dict;
 
-                size_t out_len = 0;
+    for (auto& encodedMipMap : encodedMipMaps) {
+        if (encodedMipMap.width > 128) {
+            encodedMipMap.lzoCompressed = true;
+            std::size_t estimatedSize = lzokay::compress_worst_size(encodedMipMap.data.size());
+            std::vector<unsigned char> outputData(estimatedSize);
+            size_t compressedSize = 0;
 
-                std::vector<unsigned char> outputData(encodedMipMap.data.size() * 2);
-                std::vector<unsigned char> workMemory(LZO1X_999_MEM_COMPRESS);
-
-                if (lzo1x_999_compress(reinterpret_cast<const uint8_t*>(encodedMipMap.data.data()), encodedMipMap.dataLength, outputData.data(), &out_len, workMemory.data()) != LZO_E_OK) {
-                    throw std::runtime_error("LZO Compression failed");
-                }
-
-                encodedMipMap.data = std::vector<uint8_t>(outputData.data(), outputData.data() + out_len);
-                encodedMipMap.dataLength = out_len;
-
-                encodedMipMap.width |= 0x8000;
+            auto error = lzokay::compress(encodedMipMap.data.data(), encodedMipMap.data.size(), outputData.data(), estimatedSize, compressedSize, dict);
+            if (error < lzokay::EResult::Success) {
+                throw std::runtime_error("LZO Compression failed");
             }
+
+            encodedMipMap.data = std::vector<uint8_t>(outputData.data(), outputData.data() + compressedSize);
+            encodedMipMap.dataLength = compressedSize;
+
+            encodedMipMap.width |= 0x8000;
+
         }
     }
-    else {
-        throw std::runtime_error("LZO Init failed!");
-    }
-
 
     Tagg taggOffs;
     taggOffs.signature = "GGATSFFO";
