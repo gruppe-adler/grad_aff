@@ -15,6 +15,8 @@
 #include "tagg.h"
 #include "palette.h"
 
+#ifdef __cplusplus
+
 namespace grad_aff {
     class GRAD_AFF_API Paa {
     public:
@@ -74,4 +76,34 @@ namespace grad_aff {
         void writeImage(std::string filename, int level = 0);
 #endif
     };
+
+#else
+typedef
+struct Paa
+    Paa;
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    extern GRAD_AFF_API Paa* newPaa();
+    extern GRAD_AFF_API void delPaa(Paa* paaPtr);
+
+    extern GRAD_AFF_API void readPaa(Paa* paaPtr, const char* filename, bool peek);
+    extern GRAD_AFF_API void readPaaData(Paa* paaPtr, const uint8_t* data, size_t size, bool peek);
+
+    extern GRAD_AFF_API void writePaa(Paa* paaPtr, const char* filename, int typeOfPax);
+    extern GRAD_AFF_API uint8_t* writePaaData(Paa* paaPtr, size_t* sizeOut, int typeOfPax);
+
+    extern GRAD_AFF_API void calculateMipmapsAndTaggs(Paa* paaPtr);
+
+    extern GRAD_AFF_API void freeDataPtr(uint8_t* dataPtr);
+
+    extern GRAD_AFF_API size_t getMipMapCount(Paa* paaPtr);
+    extern GRAD_AFF_API void setMipMap(Paa* paaPtr, uint16_t width, uint16_t height, uint8_t* data, size_t dataSize, int level);
+    extern GRAD_AFF_API void getMipMap(Paa* paaPtr, uint16_t* width, uint16_t* height, uint8_t** data, size_t* dataSize, bool* lzoCompressed, int level);
+
+#ifdef __cplusplus
+}
 };
+#endif

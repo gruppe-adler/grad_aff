@@ -20,6 +20,8 @@ namespace bg = boost::gil;
 using namespace OIIO;
 #endif
 
+using namespace grad_aff;
+
 grad_aff::Paa::Paa() {
     this->typeOfPax = TypeOfPaX::UNKNOWN;
 };
@@ -479,3 +481,72 @@ void grad_aff::Paa::writeImage(std::string filename, int level) {
     outImage->close();
 }
 #endif
+
+// C Implementation
+Paa* grad_aff::newPaa() {
+    return new Paa();
+}
+void grad_aff::delPaa(Paa* paaPtr) {
+    delete paaPtr;
+}
+
+void grad_aff::readPaa(Paa* paaPtr, const char* filename, bool peek) {
+    paaPtr->readPaa(std::string(filename), peek);
+}
+
+void grad_aff::readPaaData(Paa* paaPtr, const uint8_t* data, size_t size, bool peek) {
+    paaPtr->readPaa(std::vector<uint8_t>(data, data + size), peek);
+}
+
+void grad_aff::writePaa(Paa* paaPtr, const char* filename, int typeOfPax) {
+    paaPtr->writePaa(std::string(filename), (Paa::TypeOfPaX)typeOfPax);
+}
+
+uint8_t* grad_aff::writePaaData(Paa* paaPtr, size_t* sizeOut, int typeOfPax) {
+    auto data = paaPtr->writePaa((Paa::TypeOfPaX)typeOfPax);
+
+    uint8_t* dataPtr = (uint8_t*)malloc(data.size());
+    if (dataPtr == nullptr) {
+        return nullptr;
+    }
+    std::memcpy(dataPtr, data.data(), data.size());
+    *sizeOut = data.size();
+    return dataPtr;
+}
+
+void grad_aff::calculateMipmapsAndTaggs(Paa* paaPtr) {
+    paaPtr->calculateMipmapsAndTaggs();
+ }
+
+void grad_aff::freeDataPtr(uint8_t* dataPtr) {
+    free(dataPtr);
+}
+
+size_t grad_aff::getMipMapCount(Paa* paaPtr) {
+    return paaPtr->mipMaps.size();
+}
+
+void grad_aff::setMipMap(Paa* paaPtr, uint16_t width, uint16_t height, uint8_t* data, size_t dataSize, int level) {
+    MipMap mipMap;
+    mipMap.width = width;
+    mipMap.height = height;
+    mipMap.dataLength;
+    mipMap.data = std::vector<uint8_t>(data, data + dataSize);
+
+    if (level >= paaPtr->mipMaps.size() - 1) {
+        paaPtr->mipMaps.reserve(level + 1);
+    }
+    paaPtr->mipMaps[level] = mipMap;
+}
+
+void grad_aff::getMipMap(Paa* paaPtr, uint16_t* width, uint16_t* height, uint8_t** data, size_t* dataSize, bool* lzoCompressed, int level) {
+    auto mipMap = paaPtr->mipMaps[level];
+    *width = mipMap.width;
+    *height = mipMap.height;
+    *lzoCompressed = mipMap.lzoCompressed;
+
+    uint8_t* dataPtr = (uint8_t*)malloc(mipMap.data.size());
+    std::memcpy(dataPtr, mipMap.data.data(), mipMap.data.size());
+    *data = dataPtr;
+    *dataSize = mipMap.data.size();
+}
