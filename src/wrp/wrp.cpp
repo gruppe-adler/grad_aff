@@ -1,7 +1,5 @@
 #include "grad_aff/wrp/wrp.h"
 
-#include <lzo/lzo1x.h>
-
 grad_aff::Wrp::Wrp(std::string wrpFilename) {
     this->is = std::make_shared<std::ifstream>(wrpFilename, std::ios::binary);
     this->wrpName = wrpFilename;
