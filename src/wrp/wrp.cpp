@@ -55,7 +55,10 @@ void grad_aff::Wrp::readWrp()
     }
     this->wrpVersion = readBytes<uint32_t>(*is);
     // because why not right?
-    this->appId = readBytes<uint32_t>(*is);
+    // check which version
+    if (wrpVersion > 24) {
+        this->appId = readBytes<uint32_t>(*is);
+    }
     this->layerSizeX = readBytes<uint32_t>(*is);
     this->layerSizeY = readBytes<uint32_t>(*is);
     this->mapSizeX = readBytes<uint32_t>(*is);
