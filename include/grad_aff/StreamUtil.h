@@ -52,6 +52,9 @@ namespace grad_aff {
     template<typename T>
     std::vector<T> readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag, size_t arrSize);
 
+    template<typename T>
+    std::vector<T> readCompressedFillArray(std::istream& is, bool useCompressionFlag);
+
     // Write
     template<typename T>
     void writeBytes(std::ostream& ofs, T t);

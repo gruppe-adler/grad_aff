@@ -472,15 +472,21 @@ ODOLv4xLod grad_aff::Odol::readLod() {
         lod.vertexCount = readBytes<uint32_t>(*is);
     }
     else {
-        throw std::runtime_error("TODO implement this"); // lol
+        auto compressedArray = readCompressedFillArray<uint32_t>(*is, useCompression);
+
+        lod.lodPointFlags.clear();
+        lod.lodPointFlags.reserve(compressedArray.size());
+        std::transform(compressedArray.begin(), compressedArray.end(), std::back_inserter(lod.lodPointFlags), [](int n) { 
+            return static_cast<ClipFlag>(n); 
+        });
     }
 
     if (version >= 51) {
         lod.faceArea = readBytes<float_t>(*is);
     }
 
-    lod.orHints = (ClipFlag)readBytes<uint32_t>(*is);
-    lod.andHints = (ClipFlag)readBytes<uint32_t>(*is);
+    lod.orHints = static_cast<ClipFlag>(readBytes<uint32_t>(*is));
+    lod.andHints = static_cast<ClipFlag>(readBytes<uint32_t>(*is));
 
     lod.bMin = readXYZTriplet(*is);
     lod.bMax = readXYZTriplet(*is);

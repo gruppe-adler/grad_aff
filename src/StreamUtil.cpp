@@ -203,6 +203,29 @@ std::vector<T> grad_aff::readCompressedArray(std::istream& is, size_t expectedSi
 template std::vector<uint32_t> grad_aff::readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag, size_t arrSize);
 template std::vector<float_t> grad_aff::readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag, size_t arrSize);
 
+template<typename T>
+std::vector<T> grad_aff::readCompressedFillArray(std::istream& is, bool useCompressionFlag) {
+    auto n = readBytes<uint32_t>(is);
+
+    auto defaultFill = readBytes<bool>(is);
+
+    std::vector<T> data;
+    if (defaultFill) {
+        auto fillValue = readBytes<T>(is);
+
+        for (size_t i = 0; i < n; i++)
+        {
+            data.push_back(defaultFill);
+        }
+    }
+    else {
+        data = readCompressedArray<T>(is, n, useCompressionFlag);
+    }
+    return data;
+}
+
+template std::vector<uint32_t> grad_aff::readCompressedFillArray(std::istream& is, bool useCompressionFlag);
+
 /*
     Write
 */

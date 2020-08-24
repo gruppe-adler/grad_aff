@@ -33,6 +33,8 @@ struct ODOLv4xLod {
 
     std::optional<float_t> faceArea = {};
 
+    std::vector<ClipFlag> lodPointFlags = {};
+
     ClipFlag orHints = (ClipFlag)0;
     ClipFlag andHints = (ClipFlag)0;
     XYZTriplet bMin = {};
