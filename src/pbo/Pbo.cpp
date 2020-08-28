@@ -57,12 +57,28 @@ void grad_aff::Pbo::readPbo(bool withData) {
         return;
 
     for (auto& entry : entries) {
-        entry.second->data = readBytes(*is, entry.second->dataSize);
+        entry.second->data = readEntry(*entry.second);
     }
 
     preHashPos = is->tellg();
     auto nullByte = readBytes(*is, 1);
     hash = readBytes(*is, 20);
+}
+
+std::vector<uint8_t> grad_aff::Pbo::readEntry(const Entry& entry) {
+    auto data = readBytes(*is, entry.dataSize);
+    if (entry.orginalSize != 0 && entry.orginalSize != entry.dataSize) {
+        std::vector<uint8_t> uncompressed;
+        if (readLzss(data, uncompressed) == entry.dataSize) {
+            return uncompressed;
+        }
+        else {
+            throw std::runtime_error("Couldn't read data");
+        }
+    }
+    else {
+        return data;
+    }
 }
 
 #ifdef GRAD_AFF_USE_OPENSSL
@@ -157,7 +173,7 @@ void grad_aff::Pbo::readSingleData(fs::path searchEntry) {
     for (auto &entry : entries) {
         if (entry.second->filename == searchEntry) {
             is->seekg(targetDataOffset, std::ios::cur);
-            entry.second->data = readBytes(*is, entry.second->dataSize);
+            entry.second->data = readEntry(*entry.second);
         }
         else {
             targetDataOffset += entry.second->dataSize;

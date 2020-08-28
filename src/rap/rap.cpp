@@ -173,9 +173,25 @@ void grad_aff::Rap::readRap() {
     // TODO assert;
 
     auto initalZero = readBytes<uint8_t>(*is);
-    assert(initalZero == 0);
     auto rap = readString(*is, 3);
-    assert(rap == "raP");
+
+    if (initalZero != 0 && rap != "raP") {
+        // try lzss decompression
+        try
+        {
+            is->seekg(0);
+            std::vector<uint8_t> out;
+            auto ret = readLzssFile(*is, out);
+            if (ret > 0) {
+                this->is = std::make_shared<std::stringstream>(std::string(out.begin(), out.end()));
+                readRap();
+                return;
+            }
+        }
+        catch (const std::exception& ex) {}
+
+        throw std::runtime_error("Invalid file!");
+    }
 
     auto always0 = readBytes<uint32_t>(*is);
     assert(always0 == 0);
@@ -273,8 +289,32 @@ void grad_aff::Rap::parseConfig(fs::path path) {
     this->classEntries.clear();
 
     std::ifstream file(path);
-    std::string stringInput((std::istreambuf_iterator<char>(file)),
-        std::istreambuf_iterator<char>());
+
+    std::string stringInput;
+
+    // check for lzss
+    auto firstByte = readBytes<uint8_t>(file);
+    file.seekg(0);
+    if (firstByte == 0xFF) {
+        std::ifstream lzssFile(path, std::ios::binary);
+        std::vector<uint8_t> out;
+        if (readLzssFile(lzssFile, out) > 0) {
+            stringInput = std::string(out.begin(), out.end());
+
+            std::ofstream fout("data.dat", std::ios::out | std::ios::binary);
+            fout.write(reinterpret_cast<char*>(stringInput.data()), stringInput.size());
+            fout.close();
+        }
+        else {
+            throw std::runtime_error("Invalid file!");
+        }
+    }
+    else {
+        stringInput = std::string((std::istreambuf_iterator<char>(file)),
+            std::istreambuf_iterator<char>());
+    }
+
+   
 
     preprocess(stringInput);
 

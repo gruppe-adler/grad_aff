@@ -51,6 +51,20 @@ void grad_aff::Wrp::readWrp()
     // TODO Checks
     this->wrpTypeName = readString(*is, 4);
     if(this->wrpTypeName != "OPRW") {
+        // try lzss decompression
+        try
+        {
+            is->seekg(0);
+            std::vector<uint8_t> out;
+            auto ret = readLzssFile(*is, out);
+            if (ret > 0) {
+                this->is = std::make_shared<std::stringstream>(std::string(out.begin(), out.end()));
+                readWrp();
+                return;
+            }
+        }
+        catch (const std::exception& ex) {}
+
         throw std::runtime_error("Invalid file!");
     }
     this->wrpVersion = readBytes<uint32_t>(*is);

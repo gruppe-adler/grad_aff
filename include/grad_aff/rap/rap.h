@@ -40,7 +40,7 @@ namespace grad_aff {
         void readRap();
         void parseConfig(fs::path path);
 
-        void readConfig(fs::path path);
+        //void readConfig(fs::path path);
 
         void preprocess(std::string& input);
 

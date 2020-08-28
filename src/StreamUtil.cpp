@@ -264,3 +264,135 @@ void grad_aff::writeZeroTerminatedString(std::ostream& ofs, std::string string) 
 void grad_aff::writeTimestamp(std::ostream& ofs, std::chrono::milliseconds milliseconds) {
     writeBytes<uint32_t>(ofs, milliseconds.count());
 }
+
+size_t grad_aff::readLzssFile(std::istream& is, std::vector<uint8_t>& out)
+{
+    std::streampos inSize = 0;
+    inSize = is.tellg();
+    is.seekg(0, std::ios::end);
+    inSize = is.tellg() - inSize;
+
+    is.seekg(0);
+
+    const int slidingWindowSize = 4096;
+    const int bestMatch = 18;
+    const int threshold = 2;
+
+    std::vector<uint8_t> textBuffer(slidingWindowSize + bestMatch - 1);
+    out.reserve(inSize * 4);
+
+    int textBufferIndex = 0, checkSum = 0, flags = 0;
+    textBufferIndex = slidingWindowSize - bestMatch;
+    while (is.tellg() < (inSize - static_cast<std::streampos>(4)))
+    {
+        if (((flags >>= 1) & 256) == 0)
+        {
+            flags = readBytes<uint8_t>(is) | 0xff00;
+        }
+        if ((flags & 1) != 0)
+        {
+            auto data = readBytes<uint8_t>(is);
+            checkSum += data;
+
+            out.push_back(data);
+
+            textBuffer[textBufferIndex] = data;
+            textBufferIndex++; textBufferIndex &= (slidingWindowSize - 1);
+        }
+        else
+        {
+            int pos = readBytes<uint8_t>(is);
+            int length = readBytes<uint8_t>(is);
+            pos |= (length & 0xf0) << 4; length &= 0x0f; length += threshold;
+
+            int bufferPos = textBufferIndex - pos;
+            int bufferLength = length + bufferPos;
+
+            for (; bufferPos <= bufferLength; bufferPos++)
+            {
+                auto data = textBuffer[bufferPos & (slidingWindowSize - 1)];
+                checkSum += data;
+
+                out.push_back(data);
+
+                textBuffer[textBufferIndex] = data;
+                textBufferIndex++; textBufferIndex &= (slidingWindowSize - 1);
+            }
+        }
+    }
+
+    auto readChecksum = readBytes<int32_t>(is);
+    if (checkSum == readChecksum) {
+        return inSize;
+    }
+    else {
+        return -1;
+    }
+}
+
+size_t grad_aff::readLzss(std::vector<uint8_t> in, std::vector<uint8_t>& out)
+{
+    auto inSize = in.size();
+    auto inIndex = 0;
+
+    const int slidingWindowSize = 4096;
+    const int bestMatch = 18;
+    const int threshold = 2;
+
+    std::vector<uint8_t> textBuffer(slidingWindowSize + bestMatch - 1);
+    out.reserve(inSize * 4);
+
+    int textBufferIndex = 0, checkSum = 0, flags = 0;
+    textBufferIndex = slidingWindowSize - bestMatch;
+    while (inIndex < (inSize - static_cast<std::streampos>(4)))
+    {
+        if (((flags >>= 1) & 256) == 0)
+        {
+            flags = in[inIndex] | 0xff00;
+            inIndex++;
+        }
+        if ((flags & 1) != 0)
+        {
+            auto data = in[inIndex];
+            inIndex++;
+            checkSum += data;
+
+            out.push_back(data);
+
+            textBuffer[textBufferIndex] = data;
+            textBufferIndex++; textBufferIndex &= (slidingWindowSize - 1);
+        }
+        else
+        {
+            int pos = in[inIndex];
+            inIndex++;
+            int length = in[inIndex];
+            inIndex++;
+            pos |= (length & 0xf0) << 4; length &= 0x0f; length += threshold;
+
+            int bufferPos = textBufferIndex - pos;
+            int bufferLength = length + bufferPos;
+
+            for (; bufferPos <= bufferLength; bufferPos++)
+            {
+                auto data = textBuffer[bufferPos & (slidingWindowSize - 1)];
+                checkSum += data;
+
+                out.push_back(data);
+
+                textBuffer[textBufferIndex] = data;
+                textBufferIndex++; textBufferIndex &= (slidingWindowSize - 1);
+            }
+        }
+    }
+
+    int readChecksum;
+    std::memcpy(&readChecksum, &in[inIndex], 4);
+
+    if (checkSum == readChecksum) {
+        return inSize;
+    }
+    else {
+        return -1;
+    }
+}

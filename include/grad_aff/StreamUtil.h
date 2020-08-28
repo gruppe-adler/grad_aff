@@ -66,4 +66,9 @@ namespace grad_aff {
 
     void writeZeroTerminatedString(std::ostream& ofs, std::string string);
     void writeTimestamp(std::ostream& ofs, std::chrono::milliseconds milliseconds);
+
+
+    // Compression
+    size_t readLzssFile(std::istream& is, std::vector<uint8_t>& out);
+    size_t readLzss(std::vector<uint8_t> data, std::vector<uint8_t>& out);
 }

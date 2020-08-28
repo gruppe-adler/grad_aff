@@ -39,6 +39,8 @@ namespace grad_aff {
 
         std::vector<uint8_t> getEntryData(fs::path entryPath);
 
+        std::vector<uint8_t> readEntry(const Entry& entryPtr);
+
         std::string pboName = "";
         //std::vector<Entry> entries = {};
         tsl::ordered_map<std::string, std::shared_ptr<Entry>> entries = {};

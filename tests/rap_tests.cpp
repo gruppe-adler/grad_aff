@@ -3,9 +3,27 @@
 #include <catch2/catch.hpp>
 
 #include "grad_aff/rap/rap.h"
+#include "grad_aff/StreamUtil.h"
 
 #include <fstream>
 #include <vector>
+
+TEST_CASE("lzss test", "[lzss-test]") {
+    grad_aff::Rap test_rap_obj;
+    //auto ifs = std::make_shared<std::ifstream>("Tembelan.wrp", std::ios::binary);
+   /* auto ifs = std::make_shared<std::ifstream>("RoadsLibLzss.cfg", std::ios::binary);
+
+    std::vector<uint8_t> out;
+    grad_aff::readLzssFile(*ifs, out);
+
+    std::ofstream fout("data.dat", std::ios::out | std::ios::binary);
+    fout.write(reinterpret_cast<char*>(out.data()), out.size());
+    fout.close();*/
+
+    test_rap_obj.parseConfig("RoadsLibLzss.cfg");
+    grad_aff::Rap test_rap_obj2("LzssRvmat.rvmat");
+    test_rap_obj2.readRap();
+}
 
 TEST_CASE("parse enoch roadslib", "[parse-enoch-roadslib]") {
     grad_aff::Rap test_rap_obj;
