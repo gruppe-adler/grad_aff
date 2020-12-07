@@ -578,7 +578,7 @@ ODOLv4xLod grad_aff::Odol::readLod() {
             if (version >= 11) {
                 dummyStageTexture.useWorldEnvMap = readBytes<bool>(*is);
             }
-            lodMaterial.dummyStageTexture->push_back(dummyStageTexture);
+            lodMaterial.dummyStageTexture.push_back(dummyStageTexture);
         }
         lod.lodMaterials.push_back(lodMaterial);
     }
@@ -644,19 +644,19 @@ ODOLv4xLod grad_aff::Odol::readLod() {
         if (version >= 36) {
             lodSection.nStages = readBytes<uint32_t>(*is);
             for(auto j = 0; j < lodSection.nStages; j++) {
-                lodSection.areaOverTex->push_back(readBytes<float_t>(*is));
+                lodSection.areaOverTex.push_back(readBytes<float_t>(*is));
             }
             
             if (version >= 67 && readBytes<uint32_t>(*is) >= 1) {
                 for (auto j = 0; j < 12; j++) {
-                    (*lodSection.floats)[j] = readBytes<float_t>(*is);
+                    (lodSection.floats)[j] = readBytes<float_t>(*is);
                 }
             }
 
         }
         else {
             lodSection.nStages = 1;
-            lodSection.areaOverTex->push_back(readBytes<float_t>(*is));
+            lodSection.areaOverTex.push_back(readBytes<float_t>(*is));
         }
         lod.lodSections.push_back(lodSection);
     }

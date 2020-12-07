@@ -202,6 +202,8 @@ void grad_aff::Wrp::readWrp()
         assert(object.static0x02 == 0x02);
 
         objects[i] = object;
+        // TODO: Optimize this
+        this->objectIdMap.insert({ object.objectId, object });
     }
 
     this->mapInfo = std::vector<std::shared_ptr<MapType>>();

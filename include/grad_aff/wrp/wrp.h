@@ -19,6 +19,7 @@
 #include <bitset>
 #include <sstream>
 #include <algorithm>
+#include <unordered_map>
 
 namespace fs = std::filesystem;
 
@@ -79,5 +80,6 @@ namespace grad_aff {
         std::vector<RoadNet> roadNets = {};
         std::vector<Object> objects = {};
         std::vector<std::shared_ptr<MapType>> mapInfo = {};
+        std::unordered_map<uint32_t, Object> objectIdMap = {};
     };
 }

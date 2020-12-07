@@ -57,10 +57,12 @@ if(BUILD_WITH_OIIO)
     set (LIBSQUISH_INCLUDES ${SQUISH_INCLUDE_DIR})
     set (LIBSQUISH_LIBRARIES ${SQUISH_LIBRARY})
 
+    find_package (OpenEXR CONFIG)
+
     if (NOT TARGET Libsquish::Libsquish)
         add_library(Libsquish::Libsquish UNKNOWN IMPORTED)
         set_target_properties(Libsquish::Libsquish PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${LIBSQUISH_INCLUDES}")
+           INTERFACE_INCLUDE_DIRECTORIES "${LIBSQUISH_INCLUDES}")
 
         set_property(TARGET Libsquish::Libsquish APPEND PROPERTY
             IMPORTED_LOCATION "${LIBSQUISH_LIBRARIES}")
@@ -181,7 +183,7 @@ if(GRAD_AFF_ENABLE_PARALLELISM)
     CHECK_INCLUDE_FILE_CXX(execution GRAD_AFF_CPP17_PAR)
 
     if(GRAD_AFF_CPP17_PAR)
-        message("Using C++17 parallelism")
+        message(STATUS "Using C++17 parallelism")
         add_definitions(-DGRAD_AFF_USE_CPP17_PARALLELISM)
         if(MINGW)
             target_link_libraries(grad_aff PUBLIC tbb)
@@ -190,13 +192,13 @@ if(GRAD_AFF_ENABLE_PARALLELISM)
         # Check for OpenMP
         find_package(OpenMP)
         if (OPENMP_FOUND)
-            message("Using OpenMP for parallelism")
+            message(STATUS "Using OpenMP for parallelism")
             add_definitions(-DGRAD_AFF_USE_OPENMP)
             target_link_libraries(grad_aff PUBLIC OpenMP::OpenMP_CXX)
         else()
             # Check for CPP 11 Threads
             CHECK_INCLUDE_FILE_CXX(thread GRAD_AFF_CPP11_THREADS)
-            message("Using C++11 threads for parallelism")
+            message(STATUS "Using C++11 threads for parallelism")
             add_definitions(-DGRAD_AFF_USE_CPP11_THREADS)
         endif()
     endif()

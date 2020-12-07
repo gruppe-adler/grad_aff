@@ -546,7 +546,40 @@ void grad_aff::getMipMap(Paa* paaPtr, uint16_t* width, uint16_t* height, uint8_t
     *lzoCompressed = mipMap.lzoCompressed;
 
     uint8_t* dataPtr = (uint8_t*)malloc(mipMap.data.size());
-    std::memcpy(dataPtr, mipMap.data.data(), mipMap.data.size());
-    *data = dataPtr;
-    *dataSize = mipMap.data.size();
+
+    if (dataPtr) {
+        std::memcpy(dataPtr, mipMap.data.data(), mipMap.data.size());
+        *data = dataPtr;
+        *dataSize = mipMap.data.size();
+    }
+    else {
+        dataSize = 0;
+    }
+}
+
+bool grad_aff::Paa::isValid() const noexcept {
+    return mipMaps.size() > 0 && isPowerOfTwo(mipMaps[0].height) && isPowerOfTwo(mipMaps[0].height);
+}
+
+bool grad_aff::Paa::isPowerOfTwo(uint32_t x) noexcept  {
+    return (x != 0) && ((x & (x - 1)) == 0);
+}
+
+MipMap grad_aff::Paa::getOptimalMipMap(uint16_t cx) {
+    MipMap result;
+
+    if (mipMaps.size() < 0) {
+        return result;
+    }
+    result = mipMaps[0];
+    for each (auto& const mipMap in mipMaps)
+    {
+        auto maxSize = std::max(mipMap.height, mipMap.width);
+
+        if (maxSize < cx || maxSize == 4) {
+            return result;
+        }
+        result = mipMap;
+    }
+    return result;
 }

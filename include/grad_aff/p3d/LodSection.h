@@ -19,6 +19,6 @@ struct LodSection {
     
     std::optional<std::string> material = {};
     std::optional<uint32_t> nStages = {};
-    std::optional<std::vector<float_t>> areaOverTex = {};
-    std::optional<std::array<float_t, 11>> floats = {};
+    std::vector<float_t> areaOverTex = {};
+    std::array<float_t, 11> floats = {};
 };

@@ -40,6 +40,6 @@ struct LodMaterial {
     std::vector<LodStageTexture> stageTexures = {};
     std::vector<LodStageTransform> stageTransforms = {};
 
-    std::optional<std::vector<LodStageTexture>> dummyStageTexture = {};
+    std::vector<LodStageTexture> dummyStageTexture = {};
 
 };

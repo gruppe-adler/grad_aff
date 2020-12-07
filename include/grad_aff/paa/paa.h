@@ -20,6 +20,9 @@
 namespace grad_aff {
     class GRAD_AFF_API Paa {
     public:
+
+        static bool isPowerOfTwo(uint32_t x) noexcept;
+
         enum class TypeOfPaX {
             UNKNOWN,
             DXT1,
@@ -70,6 +73,9 @@ namespace grad_aff {
         std::vector<MipMap> getMipMaps() const;
 
         bool getHasTransparency() const;
+        bool isValid() const noexcept;
+
+        MipMap getOptimalMipMap(uint16_t cx);
 
 #ifdef GRAD_AFF_USE_OIIO
         void readImage(std::string filename);
