@@ -39,3 +39,6 @@ lib/
 test_data/
 CMakeSettings.json
 build/
+
+# Test Data
+tests/data/paa/*

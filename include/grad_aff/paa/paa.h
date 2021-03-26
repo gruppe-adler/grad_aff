@@ -15,6 +15,8 @@
 #include "tagg.h"
 #include "palette.h"
 
+#include "core/AffBase.hpp"
+
 #ifdef __cplusplus
 
 namespace grad_aff {

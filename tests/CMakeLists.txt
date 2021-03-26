@@ -4,6 +4,9 @@ cmake_minimum_required (VERSION 3.8)
 find_package(Catch2 CONFIG REQUIRED)
 find_package(OpenMP REQUIRED)
 
+find_package(libpng CONFIG REQUIRED)
+find_path(BOOST_GIL_INCLUDE_DIRS "boost/gil.hpp")
+
 include_directories (${tests_SOURCE_DIR}/include)
 
 #add_executable (grad_aff_tests "grad_aff_tests.cpp" "rap_parser_tests.cpp" "pbo_tests.cpp" "paa_tests.cpp" "wrp_tests.cpp")
@@ -15,9 +18,12 @@ add_executable (grad_aff_tests_wrp "wrp_tests.cpp")
 #add_executable (grad_aff_tests "grad_aff_tests.cpp" "pbo_tests.cpp")
 #add_executable (grad_aff_tests "grad_aff_tests.cpp" "rap_tests.cpp")
 add_executable(grad_aff_tests_rap "rap_tests.cpp")
-add_executable(grad_aff_tests_paa "paa_tests.cpp")
+add_executable(grad_aff_tests_paa "paa_tests.cpp" )
 add_executable(grad_aff_tests_p3d "p3d_tests.cpp")
 add_executable(grad_aff_tests_pbo "pbo_tests.cpp")
+
+target_include_directories(grad_aff_tests_paa PRIVATE ${BOOST_GIL_INCLUDE_DIRS})
+target_link_libraries(grad_aff_tests_paa PRIVATE png_static)
 
 target_link_libraries(grad_aff_tests_p3d PRIVATE Catch2::Catch2)
 target_link_libraries(grad_aff_tests_wrp PRIVATE Catch2::Catch2)
@@ -36,3 +42,8 @@ target_link_libraries(grad_aff_tests_p3d PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(grad_aff_tests_paa PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(grad_aff_tests_rap PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(grad_aff_tests_pbo PUBLIC OpenMP::OpenMP_CXX)
+
+if(MSVC)
+    target_link_libraries(grad_aff_tests_paa PUBLIC Shlwapi.lib)
+endif()
+

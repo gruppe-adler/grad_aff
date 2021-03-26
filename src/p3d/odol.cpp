@@ -1,5 +1,6 @@
 #include "grad_aff/p3d/odol.h"
 
+#include <algorithm>
 
 grad_aff::Odol::Odol(std::string filename) {
     this->is = std::make_shared<std::ifstream>(filename, std::ios::binary);
