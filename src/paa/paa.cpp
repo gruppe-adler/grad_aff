@@ -572,7 +572,7 @@ MipMap grad_aff::Paa::getOptimalMipMap(uint16_t cx) {
         return result;
     }
     result = mipMaps[0];
-    for each (auto& const mipMap in mipMaps)
+    for (const auto& mipMap : mipMaps)
     {
         auto maxSize = std::max(mipMap.height, mipMap.width);
 
