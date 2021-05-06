@@ -1,6 +1,9 @@
 #include "core/AffLazy.h"
 
 #include <boost/interprocess/streams/bufferstream.hpp>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 #ifdef _WIN32
 #include "core/devices/IStreamDevice.hpp"
@@ -11,18 +14,20 @@ void grad::aff::core::AffLazy::readLazy(std::filesystem::path path) {
 }
 
 void grad::aff::core::AffLazy::readLazy(std::string path) {
-    if (!std::filesystem::exists(path)) {
+    auto fsPath = fs::path(path.c_str()); // gcc needs this
+    if (!fs::exists(fsPath)) {
         throw std::runtime_error("file not found");
     }
-    stream = std::dynamic_pointer_cast<std::basic_iostream<char>>(std::make_shared<std::fstream>(path, std::ios::binary | std::ios::in | std::ios::out));
+    stream = std::dynamic_pointer_cast<std::basic_iostream<char>>(std::make_shared<std::fstream>(fsPath, std::ios::binary | std::ios::in | std::ios::out));
     readLazyFromStream(true);
 }
 
 void grad::aff::core::AffLazy::readLazy(std::wstring path) {
-    if (!std::filesystem::exists(path)) {
+    auto fsPath = fs::path(path.c_str()); // gcc needs this
+    if (!fs::exists(fsPath)) {
         throw std::runtime_error("file not found");
     }
-    stream = std::dynamic_pointer_cast<std::basic_iostream<char>>(std::make_shared<std::fstream>(path, std::ios::binary | std::ios::in | std::ios::out));
+    stream = std::dynamic_pointer_cast<std::basic_iostream<char>>(std::make_shared<std::fstream>(fsPath, std::ios::binary | std::ios::in | std::ios::out));
     readLazyFromStream(true);
 }
 

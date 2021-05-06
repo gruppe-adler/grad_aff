@@ -24,16 +24,16 @@ extern "C" {
 #endif
     extern GRAD_AFF_API Tagg* TaggCreate();
     extern GRAD_AFF_API Tagg* TaggClone(Tagg* rhsTagg);
-    extern GRAD_AFF_API void TaggDestroy(Tagg* tagg);
+    extern GRAD_AFF_API bool TaggDestroy(Tagg* tagg);
 
     
-    extern GRAD_AFF_API void TaggSetSignature(Tagg* tagg, const char* signature, size_t size);
+    extern GRAD_AFF_API bool TaggSetSignature(Tagg* tagg, const char* signature, size_t size);
     extern GRAD_AFF_API size_t TaggGetSignatureSize(Tagg* tagg);
-    extern GRAD_AFF_API void TaggGetSignature(Tagg* tagg, char** signature, size_t size);
+    extern GRAD_AFF_API bool TaggGetSignature(Tagg* tagg, char* signature, size_t size);
 
     extern GRAD_AFF_API size_t TaggGetDataSize(Tagg* tagg);
-    extern GRAD_AFF_API void TaggSetData(Tagg* tagg, uint8_t* data, size_t size);
-    extern GRAD_AFF_API void TaggGetData(Tagg* tagg, uint8_t** data, size_t size);
+    extern GRAD_AFF_API bool TaggSetData(Tagg* tagg, uint8_t* data, size_t size);
+    extern GRAD_AFF_API bool TaggGetData(Tagg* tagg, uint8_t* data, size_t size);
 
 
 #ifdef __cplusplus

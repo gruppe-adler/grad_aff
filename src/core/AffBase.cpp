@@ -1,8 +1,10 @@
 #include "core/AffBase.h"
 
 #include <boost/interprocess/streams/bufferstream.hpp>
+#include <filesystem>
 
 namespace bip = boost::interprocess;
+namespace fs = std::filesystem;
 
 #ifdef _WIN32
 #include "core/devices/IStreamDevice.hpp"
@@ -13,18 +15,20 @@ void grad::aff::core::AffBase::read(std::filesystem::path path) {
 }
 
 void grad::aff::core::AffBase::read(std::string path) {
-    if (!std::filesystem::exists(path)) {
+    auto fsPath = fs::path(path.c_str()); // gcc needs this
+    if (!fs::exists(fsPath)) {
         throw std::runtime_error("file not found");
     }
-    stream = std::dynamic_pointer_cast<std::basic_iostream<char>>(std::make_shared<std::fstream>(path, std::ios::binary | std::ios::in | std::ios::out));
+    stream = std::dynamic_pointer_cast<std::basic_iostream<char>>(std::make_shared<std::fstream>(fsPath, std::ios::binary | std::ios::in | std::ios::out));
     readFromStream();
 }
 
 void grad::aff::core::AffBase::read(std::wstring path) {
-    if (!std::filesystem::exists(path)) {
+    auto fsPath = fs::path(path.c_str()); // gcc needs this
+    if (!fs::exists(fsPath)) {
         throw std::runtime_error("file not found");
     }
-    stream = std::dynamic_pointer_cast<std::basic_iostream<char>>(std::make_shared<std::fstream>(path, std::ios::binary | std::ios::in | std::ios::out));
+    stream = std::dynamic_pointer_cast<std::basic_iostream<char>>(std::make_shared<std::fstream>(fs::path(fsPath), std::ios::binary | std::ios::in | std::ios::out));
     readFromStream();
 }
 

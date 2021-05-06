@@ -2,3 +2,5 @@
 // such as names of functions and macros.
 // For more information see https://go.microsoft.com/fwlink/?linkid=865984
 #define GRAD_AFF_API
+#define REQUIRE(__VA_ARGS__) INTERNAL_CATCH_TEST( "REQUIRE", Catch::ResultDisposition::Normal, __VA_ARGS__ )
+#define REQUIRE(__VA_ARGS__) (void)(0)

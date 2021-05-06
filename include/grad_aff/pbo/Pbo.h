@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 
 namespace grad_aff {
     class GRAD_AFF_API Pbo {
-        std::shared_ptr<std::istream> is;  
+        std::shared_ptr<std::istream> is = {};
         std::streampos dataPos = 0;
         std::streampos preHashPos = 0;
     public:

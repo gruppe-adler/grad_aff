@@ -3,52 +3,142 @@
 #include "core/AffCompat.h"
 
 grad::aff::Paa::Tagg* grad::aff::Paa::TaggCreate() {
-    return new grad::aff::Paa::Tagg();
+    try {
+        core::ExceptionHelper::SetLastError(core::AFFError::OK);
+        return new grad::aff::Paa::Tagg();
+    }
+    catch (std::exception& ex) {
+        core::ExceptionHelper::SetLastError(ex);
+        return nullptr;
+    }
 }
 
 grad::aff::Paa::Tagg* grad::aff::Paa::TaggClone(Tagg* rhsTagg) {
-    auto newTagg = TaggCreate();
-    *newTagg = *rhsTagg;
-    return newTagg;
+    if (!core::ExceptionHelper::ValidHandle(rhsTagg)) {
+        core::ExceptionHelper::SetLastError(core::AFFError::InvalidHandle);
+        return nullptr;
+    }
+    try {
+        auto newTagg = TaggCreate();
+        *newTagg = *rhsTagg;
+        core::ExceptionHelper::SetLastError(core::AFFError::OK);
+        return newTagg;
+    }
+    catch (std::exception& ex) {
+        core::ExceptionHelper::SetLastError(ex);
+        return nullptr;
+    }
 }
 
-void grad::aff::Paa::TaggDestroy(Tagg* tagg) {
+bool grad::aff::Paa::TaggDestroy(Tagg* tagg) {
+    if (!core::ExceptionHelper::ValidHandle(tagg)) {
+        core::ExceptionHelper::SetLastError(core::AFFError::InvalidHandle);
+        return false;
+    }
     delete tagg;
+    core::ExceptionHelper::SetLastError(core::AFFError::OK);
+    return true;
 }
 
-void grad::aff::Paa::TaggSetSignature(Tagg* tagg, const char* signature, size_t size) {
-    std::string sig(signature, size);
-    tagg->signature = sig;
+bool grad::aff::Paa::TaggSetSignature(Tagg* tagg, const char* signature, size_t size) {
+    if (!core::ExceptionHelper::ValidHandle(tagg)) {
+        core::ExceptionHelper::SetLastError(core::AFFError::InvalidHandle);
+        return false;
+    }
+    try {
+        std::string sig(signature, size);
+        tagg->signature = sig;
+        core::ExceptionHelper::SetLastError(core::AFFError::OK);
+        return true;
+    }
+    catch (std::exception& ex) {
+        core::ExceptionHelper::SetLastError(ex);
+        return false;
+    }
 }
 
 size_t grad::aff::Paa::TaggGetSignatureSize(Tagg* tagg) {
-    return tagg->signature.size();
+    if (!core::ExceptionHelper::ValidHandle(tagg)) {
+        core::ExceptionHelper::SetLastError(core::AFFError::InvalidHandle);
+        return 0;
+    }
+    try {
+        core::ExceptionHelper::SetLastError(core::AFFError::OK);
+        return tagg->signature.size() + 1;
+    }
+    catch (std::exception& ex) {
+        core::ExceptionHelper::SetLastError(ex);
+        return 0;
+    }
 }
 
-void grad::aff::Paa::TaggGetSignature(Tagg* tagg, char** signature, size_t size) {
-    if (size < tagg->signature.size()) {
-        *signature = '\0';
+bool grad::aff::Paa::TaggGetSignature(Tagg* tagg, char* signature, size_t size) {
+    if (!core::ExceptionHelper::ValidHandle(tagg)) {
+        core::ExceptionHelper::SetLastError(core::AFFError::InvalidHandle);
+        return false;
+    }
+    if (size < tagg->signature.size() + 1) {
+        core::ExceptionHelper::SetLastError(core::AFFError::ArgumentError);
+        return false;
     }
     else {
-        *signature = aff_strdup(tagg->signature.c_str());
+        try {
+            std::memcpy(signature, tagg->signature.data(), tagg->signature.size());
+            signature[tagg->signature.size()] = '\0';
+            core::ExceptionHelper::SetLastError(core::AFFError::OK);
+            return true;
+        }
+        catch (std::exception& ex) {
+            core::ExceptionHelper::SetLastError(ex);
+            return false;
+        }
     }
 }
 
 size_t grad::aff::Paa::TaggGetDataSize(Tagg* tagg) {
+    if (!core::ExceptionHelper::ValidHandle(tagg)) {
+        core::ExceptionHelper::SetLastError(core::AFFError::InvalidHandle);
+        return 0;
+    }
+    core::ExceptionHelper::SetLastError(core::AFFError::OK);
     return tagg->data.size();
 }
 
-void grad::aff::Paa::TaggSetData(Tagg* tagg, uint8_t* data, size_t size) {
-    std::vector<uint8_t> dataVec(data, data + size);
-    tagg->data = dataVec;
+bool grad::aff::Paa::TaggSetData(Tagg* tagg, uint8_t* data, size_t size) {
+    if (!core::ExceptionHelper::ValidHandle(tagg)) {
+        core::ExceptionHelper::SetLastError(core::AFFError::InvalidHandle);
+        return false;
+    }
+    try {
+        std::vector<uint8_t> dataVec(data, data + size);
+        tagg->data = dataVec;
+        core::ExceptionHelper::SetLastError(core::AFFError::OK);
+        return true;
+    }
+    catch (std::exception& ex) {
+        core::ExceptionHelper::SetLastError(ex);
+        return false;
+    }
 }
 
-void grad::aff::Paa::TaggGetData(Tagg* tagg, uint8_t** data, size_t size) {
+bool grad::aff::Paa::TaggGetData(Tagg* tagg, uint8_t* data, size_t size) {
+    if (!core::ExceptionHelper::ValidHandle(tagg)) {
+        core::ExceptionHelper::SetLastError(core::AFFError::InvalidHandle);
+        return false;
+    }
     if (size < tagg->data.size()) {
-        *data = nullptr;
+        core::ExceptionHelper::SetLastError(core::AFFError::ArgumentError);
+        return false;
     }
     else {
-        std::memcpy(*data, tagg->data.data(), tagg->data.size());
+        try {
+            std::memcpy(data, tagg->data.data(), tagg->data.size());
+            return true;
+        }
+        catch (std::exception& ex) {
+            core::ExceptionHelper::SetLastError(ex);
+            return false;
+        }
     }
 }
 

@@ -41,4 +41,5 @@ CMakeSettings.json
 build/
 
 # Test Data
+!tests/data/*
 tests/data/paa/*

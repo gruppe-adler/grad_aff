@@ -27,20 +27,20 @@ extern "C" {
 #endif
     extern GRAD_AFF_API Mipmap* MipmapCreate();
     extern GRAD_AFF_API Mipmap* MipmapClone(Mipmap* rhsMipmap);
-    extern GRAD_AFF_API void MipmapDestroy(Mipmap* mipmap);
+    extern GRAD_AFF_API bool MipmapDestroy(Mipmap* mipmap);
 
     extern GRAD_AFF_API uint16_t MipmapGetWidth(Mipmap* mipmap);
-    extern GRAD_AFF_API void MipmapSetWidth(Mipmap* mipmap, uint16_t width);
+    extern GRAD_AFF_API bool MipmapSetWidth(Mipmap* mipmap, uint16_t width);
 
     extern GRAD_AFF_API uint16_t MipmapGetHeight(Mipmap* mipmap);
-    extern GRAD_AFF_API void MipmapSetHeight(Mipmap* mipmap, uint16_t height);
+    extern GRAD_AFF_API bool MipmapSetHeight(Mipmap* mipmap, uint16_t height);
 
     extern GRAD_AFF_API bool MipmapIsLzoCompressed(Mipmap* mipmap);
-    extern GRAD_AFF_API void MipmapSetLzoCompressed(Mipmap* mipmap, bool isLzoCompressed);
+    //extern GRAD_AFF_API void MipmapSetLzoCompressed(Mipmap* mipmap, bool isLzoCompressed);
 
     extern GRAD_AFF_API size_t MipmapGetDataSize(Mipmap* mipmap);
-    extern GRAD_AFF_API void MipmapSetData(Mipmap* mipmap, uint8_t* data, size_t size);
-    extern GRAD_AFF_API void MipmapGetData(Mipmap* mipmap, uint8_t** data, size_t size);
+    extern GRAD_AFF_API bool MipmapSetData(Mipmap* mipmap, uint8_t* data, size_t size);
+    extern GRAD_AFF_API bool MipmapGetData(Mipmap* mipmap, uint8_t* data, size_t size);
 
 #ifdef __cplusplus
 }

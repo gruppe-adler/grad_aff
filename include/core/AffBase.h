@@ -18,6 +18,8 @@
 #include "AffTypes.h"
 #include "AffDefines.h"
 
+#include "AffExceptions.h"
+
 namespace grad::aff::core {
     class AffBase {
     public:

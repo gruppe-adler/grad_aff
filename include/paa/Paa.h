@@ -1,8 +1,16 @@
 #pragma once
 
+#ifdef __cplusplus
+
 #include <cstdint>
 #include <optional>
 #include <map>
+
+#else
+
+#include <stdint.h>
+
+#endif
 
 #include "../core/AffApi.h"
 #include "../core/AffLazy.h"
@@ -24,7 +32,7 @@ namespace grad::aff::Paa {
         /**
          * @brief PaX Type enum.
         */
-        enum class TypeOfPaX : uint16_t {
+        enum class TypeOfPaX : int32_t {
             UNKNOWN = 0,            /**< enum value 1 */
             DXT1 = 0xff01,          /* DXT1 PAA */
             DXT2 = 0xff02,          /* DXT2 PAA */
@@ -45,7 +53,7 @@ namespace grad::aff::Paa {
         size_t averageGreen = 0;
         size_t averageAlpha = 0;
 
-        std::vector<std::streampos> mipMapPositions = {};
+        std::vector<std::streampos> mipmapPositions = {};
         //void readPaa(std::shared_ptr<std::basic_iostream<char>> is, bool peek);
         //void writePaaToOutStream(TypeOfPaX typeOfPaX = TypeOfPaX::UNKNOWN);
         //std::vector<uint8_t> readMipMapData(size_t mipMapSize, uint16_t width, uint16_t height, bool isLzoCompressed);
@@ -74,7 +82,7 @@ namespace grad::aff::Paa {
         /**
         * The PAA mipmaps.
         */
-        std::vector<Mipmap> mipMaps = {};
+        std::vector<Mipmap> mipmaps = {};
 
         /**
          * @brief Set the PAA mipmaps.
@@ -178,47 +186,49 @@ extern "C" {
     /// @return NULL on failure, or a new Paa.
     extern GRAD_AFF_API Paa* PaaCreate();
 
+    extern GRAD_AFF_API Paa* PaaCreateFromData(uint16_t width, uint16_t height, uint8_t* data, size_t size);
+
     /// @brief Destroys a Paa Object.
     /// @param paa The object to destroy.
-    extern GRAD_AFF_API void PaaDestroy(Paa* paa);
+    extern GRAD_AFF_API bool PaaDestroy(Paa* paa);
 
     extern GRAD_AFF_API uint32_t PaaGetTypeOfPax(Paa* paa);
 
-    extern GRAD_AFF_API void PaaSetMipmaps(Paa* paa, Mipmap** mipmap, size_t size);
+    extern GRAD_AFF_API bool PaaSetMipmaps(Paa* paa, Mipmap** mipmap, uint8_t size);
     extern GRAD_AFF_API size_t PaaGetMipmapCount(Paa* paa);
-    extern GRAD_AFF_API void PaaGetMipmaps(Paa* paa, Mipmap** mipmaps, size_t size);
-    extern GRAD_AFF_API Mipmap* PaaGetMipmap(Paa* paa, size_t level);
-    extern GRAD_AFF_API void PaaSetMipmap(Paa* paa, Mipmap* mipMap, size_t level);
+    extern GRAD_AFF_API bool PaaGetMipmaps(Paa* paa, Mipmap** mipmaps, uint8_t size);
+    extern GRAD_AFF_API Mipmap* PaaGetMipmap(Paa* paa, uint8_t level);
+    extern GRAD_AFF_API bool PaaSetMipmap(Paa* paa, Mipmap* mipMap, uint8_t level);
 
     extern GRAD_AFF_API uint8_t PaaGetOptimalMipMapIndex(Paa* paa, uint16_t cx);
     extern GRAD_AFF_API Mipmap* PaaGetOptimalMipMap(Paa* paa, uint16_t cx);
 
     extern GRAD_AFF_API size_t PaaGetTaggCount(Paa* paa);
-    extern GRAD_AFF_API void PaaSetTaggs(Paa* paa, Tagg** taggs, size_t size);
-    extern GRAD_AFF_API void PaaGetTaggs(Paa* paa, Tagg** taggs, size_t size);
+    extern GRAD_AFF_API bool PaaSetTaggs(Paa* paa, Tagg** taggs, size_t size);
+    extern GRAD_AFF_API bool PaaGetTaggs(Paa* paa, Tagg** taggs, size_t size);
 
     extern GRAD_AFF_API Tagg* PaaGetTagg(Paa* paa, const char* signature, size_t size);
 
     extern GRAD_AFF_API size_t PaaGetPixelDataCount(Paa* paa, uint8_t level);
-    extern GRAD_AFF_API void PaaSetPixelData(Paa* paa, uint8_t* data, size_t size, uint8_t level);
-    extern GRAD_AFF_API void PaaGetPixelData(Paa* paa, uint8_t** data, size_t size, uint8_t level);
+    extern GRAD_AFF_API bool PaaSetPixelData(Paa* paa, uint8_t* data, size_t size, uint8_t level);
+    extern GRAD_AFF_API bool PaaGetPixelData(Paa* paa, uint8_t* data, size_t size, uint8_t level);
 
-    extern GRAD_AFF_API void PaaSetPixel(Paa* paa, size_t x, size_t y, uint8_t level, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-    extern GRAD_AFF_API void PaaGetPixel(Paa* paa, size_t x, size_t y, uint8_t level, uint8_t* r, uint8_t* g, uint8_t* b, uint8_t* a);
+    extern GRAD_AFF_API bool PaaSetPixel(Paa* paa, size_t x, size_t y, uint8_t level, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    extern GRAD_AFF_API bool PaaGetPixel(Paa* paa, size_t x, size_t y, uint8_t level, uint8_t* r, uint8_t* g, uint8_t* b, uint8_t* a);
 
     extern GRAD_AFF_API bool PaaIsTransparent(Paa* paa);
     extern GRAD_AFF_API bool PaaIsValid(Paa* paa);
 
-    extern GRAD_AFF_API void PaaCalcMipmapsAndTaggs(Paa* paa);
+    extern GRAD_AFF_API bool PaaCalcMipmapsAndTaggs(Paa* paa);
 
     extern GRAD_AFF_API bool PaaIsPowerOfTwo(uint32_t x);
 
-    extern GRAD_AFF_API void PaaReadFile(Paa* paa, const char* filename, bool lazy);
-    extern GRAD_AFF_API void PaaReadData(Paa* paa, const uint8_t* data, size_t size, bool lazy);
+    extern GRAD_AFF_API bool PaaReadFile(Paa* paa, const char* filename, bool lazy);
+    extern GRAD_AFF_API bool PaaReadData(Paa* paa, const uint8_t* data, size_t size, bool lazy);
 
-    extern GRAD_AFF_API void PaaWriteFile(Paa* paa, const char* filename);
+    extern GRAD_AFF_API bool PaaWriteFile(Paa* paa, const char* filename);
     extern GRAD_AFF_API uint8_t* PaaWriteData(Paa* paa, size_t* size);
-    extern GRAD_AFF_API void PaaDestroyWrittenData(uint8_t* data);
+    extern GRAD_AFF_API bool PaaDestroyWrittenData(uint8_t* data);
 
 
 
