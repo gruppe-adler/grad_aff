@@ -15,7 +15,7 @@
 #include "../core/AffApi.h"
 #include "../core/AffLazy.h"
 
-#include "../paa/MipMap.h"
+#include "../paa/Mipmap.h"
 #include "../paa/Tagg.h"
 
 //#include "../grad_aff/paa/tagg.h"

@@ -1,4 +1,4 @@
-#include "paa/MipMap.h"
+#include "paa/Mipmap.h"
 
 grad::aff::Paa::Mipmap* grad::aff::Paa::MipmapCreate() {
     try {

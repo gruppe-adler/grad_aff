@@ -6,7 +6,7 @@
 #include <catch2/catch.hpp>
 
 #include "paa/Paa.h"
-#include "paa/MipMap.h"
+#include "paa/Mipmap.h"
 
 
 
