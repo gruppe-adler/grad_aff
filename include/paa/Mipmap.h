@@ -1,11 +1,12 @@
 #pragma once
 
-#include <vector>
 
 #include "../core/AffApi.h"
-#include "../core/AffBase.h"
 
 #ifdef __cplusplus
+
+#include <vector>
+#include "../core/AffBase.h"
 
 namespace grad::aff::Paa {
     class GRAD_AFF_API Mipmap {
@@ -17,6 +18,11 @@ namespace grad::aff::Paa {
         uint32_t dataSize = 0;
     };
 #else
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
 typedef
 struct Mipmap
     Mipmap;

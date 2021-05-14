@@ -6,22 +6,18 @@
 #include <optional>
 #include <map>
 
-#else
-
-#include <stdint.h>
-
-#endif
-
 #include "../core/AffApi.h"
 #include "../core/AffLazy.h"
+
+#endif
 
 #include "../paa/Mipmap.h"
 #include "../paa/Tagg.h"
 
+#ifdef __cplusplus
+
 //#include "../grad_aff/paa/tagg.h"
 #include "../grad_aff/paa/palette.h"
-
-#ifdef __cplusplus
 
 namespace grad::aff::Paa {
     class GRAD_AFF_API Paa : public core::AffLazy {
@@ -174,6 +170,14 @@ namespace grad::aff::Paa {
     };
 
 #else
+
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#include "../core/AffApi.h"
+
 typedef
 struct Paa
     Paa;

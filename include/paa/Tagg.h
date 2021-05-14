@@ -1,11 +1,12 @@
 #pragma once
 
-#include <vector>
 
 #include "../core/AffApi.h"
-#include "../core/AffBase.h"
 
 #ifdef __cplusplus
+
+#include <vector>
+#include "../core/AffBase.h"
 
 namespace grad::aff::Paa {
     class GRAD_AFF_API Tagg {
@@ -14,6 +15,11 @@ namespace grad::aff::Paa {
         std::vector<uint8_t> data = {};
     };
 #else
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
 typedef
 struct Tagg
     Tagg;
