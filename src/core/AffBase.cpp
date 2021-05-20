@@ -2,7 +2,7 @@
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 #include <filesystem>
-#include <string>
+#include <sstream>
 
 namespace bip = boost::interprocess;
 namespace fs = std::filesystem;
