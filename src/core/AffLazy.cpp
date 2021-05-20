@@ -2,6 +2,7 @@
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 #include <filesystem>
+#include <string>
 
 namespace fs = std::filesystem;
 
