@@ -362,7 +362,8 @@ void grad::aff::Paa::Paa::writeToStream(std::shared_ptr<std::basic_iostream<char
 
         mipmap.data = compressedData;
         mipmap.data.resize(compressedDataLength);
-        
+
+        encodedMipMaps[i] = mipmap;
     }
 #ifdef GRAD_AFF_USE_CPP17_PARALLELISM
 );
@@ -396,6 +397,7 @@ for (size_t i = 0; i < encodedMipMaps.size(); i++) {
 
             mipmap.width |= 0x8000;
 
+            encodedMipMaps[i] = mipmap;
         }
     }
 #ifdef GRAD_AFF_USE_CPP17_PARALLELISM
@@ -430,7 +432,6 @@ for (size_t i = 0; i < encodedMipMaps.size(); i++) {
         for (int i = 0; i < 4; i++) {
             taggOffs.data.push_back(offsetAsChars[i]);
         }
-
 
         initalOffset += mipmap.data.size() + 2 * 2 + 3;
         counter++;
@@ -519,14 +520,14 @@ void grad::aff::Paa::Paa::calculateMipmapsAndTaggs() {
         for (size_t i = 0; i < height.size(); i++) {
             auto y = height[i];
 #endif
-            size_t y0 = y << 1;
+            size_t y0 = static_cast<size_t>(y) << 1;
             size_t y1 = std::min(y0 + 1, std::max(static_cast<size_t>(1), static_cast<size_t>(initalHeight >> (level - 1)) - 1));
             for (size_t x = 0; x < desiredWidth; x++) {
                 size_t x0 = x << 1;
                 size_t x1 = std::min(x0 + 1, static_cast<size_t>(1, initalWidth >> (level - 1)) - 1);
 
                 for (size_t i = 0; i < 4; i++) {
-                    data[x * 4 + y * 4 * desiredWidth + i] = static_cast<uint8_t>((1.0f / 4.0f) * (
+                    data[x * 4 + static_cast<size_t>(y) * 4 * desiredWidth + i] = static_cast<uint8_t>((1.0f / 4.0f) * (
                         prevData[x0 * 4 + y0 * 4 * prevWidth + i] +
                         prevData[x1 * 4 + y0 * 4 * prevWidth + i] +
                         prevData[x0 * 4 + y1 * 4 * prevWidth + i] +

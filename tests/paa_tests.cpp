@@ -50,6 +50,30 @@ int main(int argc, char* argv[]) {
 
 #pragma region C API
 
+TEST_CASE("PAA C Test Wasm Shit") {
+
+    int dim = 32;
+
+    std::vector<uint8_t> data(32 * 32 * 4);
+
+    for (size_t i = 0; i < 32*32*4; i+=4)
+    {
+        data[i] = 0xFF;
+        data[i + 1] = 0;
+        data[i + 2] = 0;
+        data[i + 3] = 0xFF;
+    }
+
+    Paa* paa = PaaCreateFromData(dim, dim, data.data(), 32 * 32 * 4);
+
+    size_t size = 0;
+    auto dataOut = PaaWriteData(paa, &size);
+
+    std::ofstream out("testwasm.paa", std::ios::out | std::ios::binary);
+    out.write(reinterpret_cast<char*>(dataOut), size);
+    out.close();
+}
+
 TEST_CASE("Tagg C API") {
     auto tagg = TaggCreate();
 
@@ -203,7 +227,6 @@ TEST_CASE("Read DXT1 C API Data Lazy") {
     size_t outDataSize = 0;
     auto outData = PaaWriteData(paaData, &outDataSize);
 
-    
     PaaDestroy(paaData);
 
     std::ofstream outFile(testdataOutPath / "AdlerDXT1_mem_out_c.paa", std::ios::binary);
