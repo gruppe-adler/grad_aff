@@ -33,3 +33,8 @@ void grad::aff::core::ExceptionHelper::SetLastError(grad::aff::core::AFFError er
 
 int32_t grad::aff::core::ExceptionHelper::LastErrorCode = 0;
 
+int32_t grad::aff::core::AffGetLastError()
+{
+    return grad::aff::core::ExceptionHelper::LastErrorCode;
+}
+

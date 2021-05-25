@@ -1,5 +1,13 @@
 #pragma once
 
+#include "../core/AffApi.h"
+
+#ifndef __cplusplus
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#endif
+
 #ifdef __cplusplus
 
 #include <stdexcept>
@@ -46,6 +54,13 @@ namespace grad::aff::core {
         CompressionError = -6,
         InvalidHandle = -7
     };
+#ifdef __cplusplus
+    extern "C" {
+#endif
+        extern GRAD_AFF_API int32_t AffGetLastError();
+
+#ifdef __cplusplus
+    }
 
     class ExceptionHelper {
     public:
@@ -59,7 +74,6 @@ namespace grad::aff::core {
         static void SetLastError(AFFError error);
     };
 
-#ifdef __cplusplus
 };
 #endif
 

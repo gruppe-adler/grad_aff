@@ -362,8 +362,9 @@ void grad::aff::Paa::Paa::writeToStream(std::shared_ptr<std::basic_iostream<char
 
         mipmap.data = compressedData;
         mipmap.data.resize(compressedDataLength);
-
+#ifndef GRAD_AFF_USE_CPP17_PARALLELISM
         encodedMipMaps[i] = mipmap;
+#endif
     }
 #ifdef GRAD_AFF_USE_CPP17_PARALLELISM
 );
@@ -376,7 +377,7 @@ void grad::aff::Paa::Paa::writeToStream(std::shared_ptr<std::basic_iostream<char
 #pragma omp parallel for
 #endif
 for (size_t i = 0; i < encodedMipMaps.size(); i++) {
-    auto mipmap = encodedMipMaps[i];
+        auto mipmap = encodedMipMaps[i];
 #endif
 
         lzokay::Dict<> dict;
@@ -397,7 +398,9 @@ for (size_t i = 0; i < encodedMipMaps.size(); i++) {
 
             mipmap.width |= 0x8000;
 
+#ifndef GRAD_AFF_USE_CPP17_PARALLELISM
             encodedMipMaps[i] = mipmap;
+#endif
         }
     }
 #ifdef GRAD_AFF_USE_CPP17_PARALLELISM

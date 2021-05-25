@@ -1,4 +1,3 @@
-#pragma once
 
 //#define CATCH_CONFIG_MAIN
 #define CATCH_CONFIG_RUNNER
@@ -16,8 +15,11 @@
 #include <chrono>
 #include <thread>
 
-#include <boost/gil/io/base.hpp>
-#include <boost/gil/extension/io/png.hpp>
+#include <boost/gil.hpp>
+
+#ifdef _WIN32
+#include <boost/gil/extension/io/png.hpp> // fix for gcc sometime
+#endif
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -257,7 +259,7 @@ TEST_CASE("Read/Write General C API") {
     PaaGetMipmaps(paa, &nullMipmaps, nullSize);
     REQUIRE(nullMipmaps == nullptr);
 
-    REQUIRE(PaaGetMipmap(paa, 1337) == nullptr);
+    REQUIRE(PaaGetMipmap(paa, 42) == nullptr);
 
     auto mipmap0 = PaaGetMipmap(paa, 0);
     
@@ -349,9 +351,9 @@ TEST_CASE("Operations on empty paa") {
     Paa paa;
     REQUIRE_THROWS_AS(paa.calculateMipmapsAndTaggs(), std::runtime_error);
     REQUIRE_THROWS_AS(paa.getMipMaps(), std::runtime_error);
-    REQUIRE_THROWS_AS(paa.getMipMap(1337), std::runtime_error);
-    REQUIRE_THROWS_AS(paa.setPixel(0, 0, {}, 1337), std::runtime_error);
-    REQUIRE_THROWS_AS(paa.getPixelData(1337), std::runtime_error);
+    REQUIRE_THROWS_AS(paa.getMipMap(42), std::runtime_error);
+    REQUIRE_THROWS_AS(paa.setPixel(0, 0, {}, 42), std::runtime_error);
+    REQUIRE_THROWS_AS(paa.getPixelData(42), std::runtime_error);
     REQUIRE_THROWS_AS(paa.getTagg(""), std::runtime_error);
     REQUIRE_THROWS_AS(paa.getOptimalMipMapIndex(0), std::runtime_error);
 
@@ -836,7 +838,7 @@ TEST_CASE("Write to same file") {
 
 #pragma endregion
 
-
+#ifdef _WIN32
 #pragma region Visual/PNG Test
 
 TEST_CASE("Write DXT1 as PNG") {
@@ -861,7 +863,7 @@ TEST_CASE("Write DXT5 as PNG") {
 
 }
 #pragma endregion
-
+#endif
 
 /*
 TEST_CASE("test 2048x128", "[read-write-2048x128]") {
