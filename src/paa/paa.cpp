@@ -13,10 +13,13 @@
 #include <lzokay.hpp>
 
 #include "grad_aff/paa/squishMod.h"
+#include "grad_aff/a3lzss.h"
 
 #include <boost/gil.hpp>
 #include <boost/gil/extension/numeric/resample.hpp>
 #include <boost/gil/extension/numeric/sampler.hpp>
+
+
 
 namespace bg = boost::gil;
 
@@ -28,6 +31,8 @@ grad::aff::Paa::Paa::Paa() { }
  * Private Methods
 */
 
+// https://github.com/hanhdt/cocos2dx-space-ship/blob/master/cocos2d/cocos/renderer/CCTexture2D.cpp
+
 void grad::aff::Paa::Paa::readLazyFromStream(bool lazy) {
     stream->exceptions(std::iostream::badbit | std::iostream::failbit | std::iostream::eofbit);
     //bool lazy = false;
@@ -38,6 +43,7 @@ void grad::aff::Paa::Paa::readLazyFromStream(bool lazy) {
     {
     case TypeOfPaX::DXT1:
     case TypeOfPaX::DXT5:
+    case TypeOfPaX::GRAYwAlpha:
         break;
     case TypeOfPaX::DXT2:
     case TypeOfPaX::DXT3:
@@ -45,7 +51,6 @@ void grad::aff::Paa::Paa::readLazyFromStream(bool lazy) {
     case TypeOfPaX::RGBA4444:
     case TypeOfPaX::RGBA5551:
     case TypeOfPaX::RGBA8888:
-    case TypeOfPaX::GRAYwAlpha:
         throw grad::aff::core::ReadException("unsupported paa type");
     default:
         throw grad::aff::core::ReadException("invalid file/magic number");
@@ -95,8 +100,17 @@ void grad::aff::Paa::Paa::readLazyFromStream(bool lazy) {
             mipmapPositions.push_back(pos);
         }
         else {
+
             auto compressedData = readAsBytes(mipMap.dataSize);
-            mipMap.data = decompressMipMap(compressedData, mipMap.width, mipMap.height, mipMap.isLzoCompressed);
+            if (this->typeOfPax == TypeOfPaX::GRAYwAlpha) {
+                
+                auto uncom = readLzss(compressedData);
+                //std::vector<char> uncomp(mipMap.width * mipMap.height * 2);
+                //ExpandUnknownInputLength(reinterpret_cast<char*>(compressedData.data()), uncomp.data(), uncomp.size());
+            }
+            else {
+                mipMap.data = decompressMipMap(compressedData, mipMap.width, mipMap.height, mipMap.isLzoCompressed);
+            }
 
             mipmaps.push_back(mipMap);
             mipmapPositions.push_back(pos);

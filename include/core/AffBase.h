@@ -453,6 +453,83 @@ namespace grad::aff::core {
             goto match;
         }
 
+        std::vector<uint8_t> readLzss(std::vector<uint8_t> in)
+        {
+
+            auto inSize = in.size();
+            auto inIndex = 0;
+
+            const int slidingWindowSize = 4096;
+            const int bestMatch = 18;
+            const int threshold = 2;
+
+            std::vector<uint8_t> textBuffer(slidingWindowSize + bestMatch - 1);
+            std::vector<uint8_t> out;
+            out.reserve(inSize * 4);
+
+            int textBufferIndex = 0, checkSum = 0, flags = 0;
+            textBufferIndex = slidingWindowSize - bestMatch;
+            while (inIndex < (inSize - static_cast<std::streampos>(4)))
+            {
+                if (((flags >>= 1) & 256) == 0)
+                {
+                    flags = in[inIndex] | 0xff00;
+                    inIndex++;
+                }
+                if ((flags & 1) != 0)
+                {
+                    auto data = in[inIndex];
+                    inIndex++;
+                    checkSum += data;
+
+                    out.push_back(data);
+
+                    textBuffer[textBufferIndex] = data;
+                    textBufferIndex++; textBufferIndex &= (slidingWindowSize - 1);
+                }
+                else
+                {
+                    int pos = in[inIndex];
+                    inIndex++;
+                    int length = in[inIndex];
+                    inIndex++;
+                    pos |= (length & 0xf0) << 4; length &= 0x0f; length += threshold;
+
+                    int bufferPos = textBufferIndex - pos;
+                    int bufferLength = length + bufferPos;
+
+                    for (; bufferPos <= bufferLength; bufferPos++)
+                    {
+                        auto data = textBuffer[bufferPos & (slidingWindowSize - 1)];
+                        checkSum += data;
+
+                        out.push_back(data);
+
+                        textBuffer[textBufferIndex] = data;
+                        textBufferIndex++; textBufferIndex &= (slidingWindowSize - 1);
+                    }
+                }
+            }
+
+            int readChecksum;
+            
+            auto s = in[inIndex];
+
+            int a = int((unsigned char)(in[inIndex]) << 24 |
+                (unsigned char)(in[inIndex + 1]) << 16 |
+                (unsigned char)(in[inIndex + 2]) << 8 |
+                (unsigned char)(in[inIndex + 3]));
+
+            //std::memcpy(&readChecksum, in[inIndex], 4);
+            // TODO
+            if (checkSum == readChecksum) {
+                return out;
+            }
+            else {
+                return {};
+            }
+        }
+
         // Write
 
         template<typename T>

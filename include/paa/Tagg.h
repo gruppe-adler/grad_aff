@@ -32,7 +32,7 @@ extern "C" {
     extern GRAD_AFF_API Tagg* TaggClone(Tagg* rhsTagg);
     extern GRAD_AFF_API bool TaggDestroy(Tagg* tagg);
 
-    
+
     extern GRAD_AFF_API bool TaggSetSignature(Tagg* tagg, const char* signature, size_t size);
     extern GRAD_AFF_API size_t TaggGetSignatureSize(Tagg* tagg);
     extern GRAD_AFF_API bool TaggGetSignature(Tagg* tagg, char* signature, size_t size);

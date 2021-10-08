@@ -10,6 +10,7 @@
 
 #ifdef __cplusplus
 
+#include <exception>
 #include <stdexcept>
 #include <ios>
 

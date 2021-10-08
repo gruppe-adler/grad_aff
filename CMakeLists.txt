@@ -13,6 +13,7 @@ option(USE_STATIC_LINKING "Static Build" ON)
 option(BUILD_TESTS "Build Tests" ON)
 option(BUILD_WITH_OPENSSL "Build with OpenSSL" OFF)
 option(GRAD_AFF_ENABLE_PARALLELISM "Enable Parallelism" ON)
+option(BUILD_WITH_OIIO "no" OFF)
 
 if(NOT DEFINED CMAKE_BUILD_TYPE OR "${CMAKE_BUILD_TYPE}" STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release")

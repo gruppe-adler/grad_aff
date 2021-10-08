@@ -111,7 +111,7 @@ namespace grad_aff::RapParser2
             }
 
             std::cout << str << std::endl;
-            auto rc = std::make_shared<ClassEntry>();
+            auto rc = std::make_shared<RapClass>();
             rc->name = str;
             state.push_back(rc);
             //state.name = str;
@@ -127,9 +127,9 @@ namespace grad_aff::RapParser2
         {
             auto str = in.string();
             std::cout << str << std::endl;
-            auto rc = std::make_shared<ClassEntry>();
+            auto rc = std::make_shared<RapClass>();
             rc->name = "null";
-            state.push_back(std::shared_ptr<ClassEntry>(nullptr));
+            state.push_back(std::shared_ptr<RapClass>(nullptr));
             //state.name = str;
         }
 

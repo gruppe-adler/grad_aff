@@ -10,22 +10,33 @@
 struct ClassEntry {
     uint8_t type;
     std::string name;
+    virtual void write(std::ostream& os, std::string spacing) = 0;
 };
 
 struct RapClass : ClassEntry {
     uint32_t offsetToClassBody;
     std::string inheritedClassname = "";
-    std::vector<std::shared_ptr<ClassEntry>> classEntries;
+    std::vector<std::shared_ptr<ClassEntry>> classEntries = {};
+
+    void write(std::ostream& os, std::string spacing) override {
+        os << name;
+        if (!inheritedClassname.empty()) {
+            os << ":" << inheritedClassname;
+        }
+        os << "{";
+
+        for (auto var : classEntries)
+        {
+            var->write(os, spacing);
+        }
+
+        os << "};";
+    }
 };
 
-struct RapArray : ClassEntry {
-    uint32_t nElements;
-    std::vector<std::variant<std::string, float_t, int32_t, RapArray>> arrayElements;
-    void write(std::ostream& os, std::string spacing);
-};
+//struct RapArray : ClassEntry {};
 
-struct ValueVisitor
-{
+struct ValueVisitor {
     std::ostream& os;
     ValueVisitor(std::ostream& os) : os(os) {};
     void operator()(int32_t i) const {
@@ -37,10 +48,27 @@ struct ValueVisitor
     void operator()(const std::string& s) const {
         os << "\"" << s << " \"\n";
     }
-    void operator()(const RapArray& ra) const {
-      //  ra.write(os, "    ");
+    //void operator()(const RapArray& ra) const {
+    //    //  ra.write(os, "    ");
+    //}
+};
+
+struct RapArray : ClassEntry {
+    uint32_t nElements;
+    std::vector<std::variant<std::string, float_t, int32_t, RapArray>> arrayElements;
+    void write(std::ostream& os, std::string spacing) override {
+        os << spacing << name << "[] = {";
+        for (size_t i = 0; i < arrayElements.size(); i++) {
+            //std::visit(ValueVisitor(os), arrayElements[i]);
+            if (i <= arrayElements.size()) {
+                os << ", ";
+            }
+        }
+        os << "}";
     }
 };
+
+
 
 struct RapValue : ClassEntry {
     uint8_t subType;
@@ -58,23 +86,20 @@ struct RapArrayFlag : RapArray {
 };
 
 struct RapExtern : ClassEntry {
-    void write(std::ostream& os, std::string spacing) {
+    void write(std::ostream& os, std::string spacing) override {
         os << spacing << " class " << this->name << ";\n";
     }
 };
-struct RapDelete : ClassEntry {};
+struct RapDelete : ClassEntry {
+    void write(std::ostream& os, std::string spacing) override {
 
-
-inline void RapArray::write(std::ostream& os, std::string spacing) {
-    os << spacing << name << "[] = {";
-    for (size_t i = 0; i < arrayElements.size(); i++) {
-        std::visit(ValueVisitor(os), arrayElements[i]);
-        if (i <= arrayElements.size()) {
-            os << ", ";
-        }
     }
-    os << "}";
-}
+};
+
+//
+//inline void RapArray::write(std::ostream& os, std::string spacing) {
+//
+//}
 
 
 /*

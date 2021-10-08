@@ -23,6 +23,8 @@ TEST_CASE("lzss test", "[lzss-test]") {
     test_rap_obj.parseConfig("RoadsLibLzss.cfg");
     grad_aff::Rap test_rap_obj2("LzssRvmat.rvmat");
     test_rap_obj2.readRap();
+    std::stringstream outTest;
+    test_rap_obj2.classEntries[0]->write(outTest, "    ");
 }
 
 TEST_CASE("parse enoch roadslib", "[parse-enoch-roadslib]") {
