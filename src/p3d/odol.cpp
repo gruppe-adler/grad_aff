@@ -520,40 +520,40 @@ ODOLv4xLod grad_aff::Odol::readLod() {
         lodMaterial.mainLight = (EMainLight)readBytes<uint32_t>(*is);
         lodMaterial.fogMode = (EFogMode)readBytes<uint32_t>(*is);
 
-        if (version == 3) {
+        if (lodMaterial.type == 3) {
             lodMaterial.unkBool = readBytes<bool>(*is);
         }
 
-        if (version >= 6) {
+        if (lodMaterial.type >= 6) {
             lodMaterial.surfaceFile = readZeroTerminatedString(*is);
         }
 
-        if (version >= 4) {
+        if (lodMaterial.type >= 4) {
             lodMaterial.nRenderFlags = readBytes<uint32_t>(*is);
             lodMaterial.renderFlags = readBytes<uint32_t>(*is);
         }
 
-        if (version > 6) {
+        if (lodMaterial.type > 6) {
             lodMaterial.nStages = readBytes<uint32_t>(*is);
         }
-        if (version > 8) {
+        if (lodMaterial.type > 8) {
             lodMaterial.nTexGens = readBytes<uint32_t>(*is);
         }
-
-        if (version < 8) {
+        auto posD3 = (size_t)is->tellg();
+        if (lodMaterial.type < 8) {
             throw std::runtime_error("TODO implement");
         }
         else {
             for (auto j = 0; j < lodMaterial.nStages; j++) {
                 LodStageTexture stageTexture;
-                if (version >= 5) {
+                if (lodMaterial.type >= 5) {
                     stageTexture.textureFilter = (TextureFilterType)readBytes<uint32_t>(*is);
                 }
                 stageTexture.paaTexture = readZeroTerminatedString(*is);
-                if (version >= 8) {
+                if (lodMaterial.type >= 8) {
                     stageTexture.transFormIndex = readBytes<uint32_t>(*is);
                 }
-                if (version >= 11) {
+                if (lodMaterial.type >= 11) {
                     stageTexture.useWorldEnvMap = readBytes<bool>(*is);
                 }
                 lodMaterial.stageTexures.push_back(stageTexture);
@@ -566,16 +566,16 @@ ODOLv4xLod grad_aff::Odol::readLod() {
                 lodMaterial.stageTransforms.push_back(stageTransform);
             }
         }
-        if (version >= 10) {
+        if (lodMaterial.type >= 10) {
             LodStageTexture dummyStageTexture;
-            if (version >= 5) {
+            if (lodMaterial.type >= 5) {
                 dummyStageTexture.textureFilter = (TextureFilterType)readBytes<uint32_t>(*is);
             }
             dummyStageTexture.paaTexture = readZeroTerminatedString(*is);
-            if (version >= 8) {
+            if (lodMaterial.type >= 8) {
                 dummyStageTexture.transFormIndex = readBytes<uint32_t>(*is);
             }
-            if (version >= 11) {
+            if (lodMaterial.type >= 11) {
                 dummyStageTexture.useWorldEnvMap = readBytes<bool>(*is);
             }
             lodMaterial.dummyStageTexture.push_back(dummyStageTexture);
@@ -728,7 +728,7 @@ ODOLv4xLod grad_aff::Odol::readLod() {
         }
         else {
             //auto uncompressed = readLZOCompressed<uint32_t>(*is, (size_t)lod.nClipFlags * 4).first;
-            auto uncompressed = readCompressed(*is, (size_t)lod.nClipFlags * 4, true);
+            auto uncompressed = readCompressed(*is, (size_t)lod.nClipFlags * 4, this->useCompression);
             for (auto& flag : uncompressed) {
                 lod.clipFlags.push_back((ClipFlag)flag);
             }

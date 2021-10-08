@@ -10,8 +10,9 @@ TEST_CASE("read test", "[read-test]") {
     //grad_aff::Odol test_odol_obj("UWreck_Mv22_F.p3d");
     //grad_aff::Odol test_odol_obj("HistoricalPlaneWreck_02_wing_left_F.p3d");
     //grad_aff::Odol test_odol_obj("invisibleRoadway_square_F.p3d");
-    //grad_aff::Odol test_odol_obj("Track_01_bumper_F.p3d");
-    grad_aff::Odol test_odol_obj("TentHangar_V1_F.p3d");
+    grad_aff::Odol test_odol_obj("Track_01_bumper_F.p3d");
+    //grad_aff::Odol test_odol_obj("TentHangar_V1_F.p3d");
+    //grad_aff::Odol test_odol_obj("aif_zluty_statek_in.p3d");
     //grad_aff::Odol test_odol_obj("palm_04.p3d");
     //grad_aff::Odol test_odol_obj("dum_mesto3_istan.p3d");
     REQUIRE_NOTHROW(test_odol_obj.readOdol());
