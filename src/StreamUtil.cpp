@@ -167,9 +167,10 @@ std::vector<uint8_t> grad_aff::readCompressed(std::istream& is, size_t expectedS
 
 template<typename T>
 std::vector<T> grad_aff::readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag) {
-    auto n = readBytes<uint32_t>(is);
-    if (n == 0)
+    
+    if (expectedSize == 0)
         return {};
+    auto n = readBytes<uint32_t>(is);
 
     auto uncomp = readCompressed(is, n * expectedSize, useCompressionFlag);
     std::vector<T> retVec;

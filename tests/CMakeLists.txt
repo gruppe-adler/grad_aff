@@ -36,3 +36,4 @@ target_link_libraries(grad_aff_tests_p3d PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(grad_aff_tests_paa PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(grad_aff_tests_rap PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(grad_aff_tests_pbo PUBLIC OpenMP::OpenMP_CXX)
+

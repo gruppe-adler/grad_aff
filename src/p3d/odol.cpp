@@ -691,7 +691,7 @@ ODOLv4xLod grad_aff::Odol::readLod() {
         */
         lodNamedSelection.nTextureWeights = readBytes<uint32_t>(*is);
         //lodNamedSelection.verticesWeights = readLZOCompressed<uint8_t>(*is, lodNamedSelection.nTextureWeights).first;
-        lodNamedSelection.verticesWeights = readCompressed(*is, lodNamedSelection.nTextureWeights, true);
+        lodNamedSelection.verticesWeights = readCompressed(*is, lodNamedSelection.nTextureWeights, this->useCompression);
 
         lod.namedSelections.push_back(lodNamedSelection);
     }
