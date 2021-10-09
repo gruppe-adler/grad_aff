@@ -4,7 +4,7 @@
 
 #include <catch2/catch.hpp>
 
-#include "grad_aff/pbo/pbo.h"
+#include "grad_aff/pbo/Pbo.h"
 
 TEST_CASE("lzss pbo read", "[lzss-read-pbo]") {
     grad_aff::Pbo testPbo("tembelan.pbo");
