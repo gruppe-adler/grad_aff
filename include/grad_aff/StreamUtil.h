@@ -53,6 +53,9 @@ namespace grad_aff {
     std::vector<T> readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag, size_t arrSize);
 
     template<typename T>
+    std::vector<T> readCompressedArrayOld(std::istream& is, size_t expectedSize, bool useCompressionFlag);
+
+    template<typename T>
     std::vector<T> readCompressedFillArray(std::istream& is, bool useCompressionFlag);
 
     // Write
@@ -69,6 +72,10 @@ namespace grad_aff {
 
 
     // Compression
+    std::vector<uint8_t> readCompressedLZOLZSS(std::istream& is, size_t expectedSize, bool useLzo);
+    std::vector<uint8_t> readLzssBlock(std::istream& is, size_t expectedSize);
+
+    size_t readLzss(std::vector<uint8_t> in, std::vector<uint8_t>& out);
     size_t readLzssFile(std::istream& is, std::vector<uint8_t>& out);
-    size_t readLzss(std::vector<uint8_t> data, std::vector<uint8_t>& out);
+    size_t readLzssSized(std::istream& is, std::vector<uint8_t>& out, size_t expectedSize, bool useSignedChecksum);
 }

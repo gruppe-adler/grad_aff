@@ -1,7 +1,6 @@
 #include "grad_aff/p3d/odol.h"
 
 #include <algorithm>
-
 grad_aff::Odol::Odol(std::string filename) {
     this->is = std::make_shared<std::ifstream>(filename, std::ios::binary);
 };
@@ -438,7 +437,7 @@ ODOLv4xLod grad_aff::Odol::readLod() {
     ODOLv4xLod lod;
     lod.nProxies = readBytes<uint32_t>(*is);
     lod.lodProxies.reserve(lod.nProxies);
-    
+
     for (auto i = 0; i < lod.nProxies; i++) {
         LodProxy lodProxy;
         lodProxy.p3dProxyName = readZeroTerminatedString(*is);
@@ -477,9 +476,9 @@ ODOLv4xLod grad_aff::Odol::readLod() {
 
         lod.lodPointFlags.clear();
         lod.lodPointFlags.reserve(compressedArray.size());
-        std::transform(compressedArray.begin(), compressedArray.end(), std::back_inserter(lod.lodPointFlags), [](int n) { 
-            return static_cast<ClipFlag>(n); 
-        });
+        std::transform(compressedArray.begin(), compressedArray.end(), std::back_inserter(lod.lodPointFlags), [](int n) {
+            return static_cast<ClipFlag>(n);
+            });
     }
 
     if (version >= 51) {
@@ -606,7 +605,7 @@ ODOLv4xLod grad_aff::Odol::readLod() {
 
     lod.lodEdges = lodEdges;
     */
-    
+
     lod.nFaces = readBytes<uint32_t>(*is);
     lod.offsetToSectionsStruct = readBytes<uint32_t>(*is);
     lod.alwaysZero = readBytes<uint16_t>(*is);
@@ -644,10 +643,10 @@ ODOLv4xLod grad_aff::Odol::readLod() {
 
         if (version >= 36) {
             lodSection.nStages = readBytes<uint32_t>(*is);
-            for(auto j = 0; j < lodSection.nStages; j++) {
+            for (auto j = 0; j < lodSection.nStages; j++) {
                 lodSection.areaOverTex.push_back(readBytes<float_t>(*is));
             }
-            
+
             if (version >= 67 && readBytes<uint32_t>(*is) >= 1) {
                 for (auto j = 0; j < 12; j++) {
                     (lodSection.floats)[j] = readBytes<float_t>(*is);
@@ -668,7 +667,13 @@ ODOLv4xLod grad_aff::Odol::readLod() {
         lodNamedSelection.selectedName = readZeroTerminatedString(*is);
 
         //lodNamedSelection.nFaces = readBytes<uint32_t>(*is);
-        lodNamedSelection.faceIndexes = readCompressedArray<uint16_t>(*is, (version >= 69 ? 4 : 2), useCompression);
+        // I will hate myself for this horrible hack
+        if (version >= 45) {
+            lodNamedSelection.faceIndexes = readCompressedArray<uint16_t>(*is, (version >= 69 ? 4 : 2), useCompression);
+        }
+        else {
+            lodNamedSelection.faceIndexes = readCompressedArrayOld<uint16_t>(*is, (version >= 69 ? 4 : 2), useCompression);
+        }
         /*
         if (version >= 69) {
             lodNamedSelection.faceIndexes = readLZOCompressed<uint16_t>(*is, (size_t)lodNamedSelection.nFaces * 4).first;
@@ -681,7 +686,13 @@ ODOLv4xLod grad_aff::Odol::readLod() {
         lodNamedSelection.isSectional = readBytes<bool>(*is);
         lodNamedSelection.sectionIndex = readCompressedArray<uint32_t>(*is, 4, useCompression);
         lodNamedSelection.nSections = lodNamedSelection.sectionIndex.size();
-        lodNamedSelection.vertexTableIndexes = readCompressedArray<uint16_t>(*is, (version >= 69 ? 4 : 2), useCompression);
+        //lodNamedSelection.vertexTableIndexes = readCompressedArray<uint16_t>(*is, (version >= 69 ? 4 : 2), useCompression);
+        if (version >= 45) {
+            lodNamedSelection.vertexTableIndexes = readCompressedArray<uint16_t>(*is, (version >= 69 ? 4 : 2), useCompression);
+        }
+        else {
+            lodNamedSelection.vertexTableIndexes = readCompressedArrayOld<uint16_t>(*is, (version >= 69 ? 4 : 2), useCompression);
+        }
         /*lodNamedSelection.nVertices = readBytes<uint32_t>(*is);
         if (version >= 69) {
             lodNamedSelection.vertexTableIndexes = readLZOCompressed<uint16_t>(*is, (size_t)lodNamedSelection.nVertices * 4).first;
@@ -746,19 +757,39 @@ ODOLv4xLod grad_aff::Odol::readLod() {
     }
 
     lod.nPoints = readBytes<uint32_t>(*is);
-    
+
     auto expectedSizeVertices = lod.nPoints * 12;
     std::vector<float_t> vertices = {};
-    bool lzoCompressed = expectedSizeVertices >= 1024;
-    if (useCompression) {
-        lzoCompressed = readBytes<bool>(*is);
-    }
-    if (lzoCompressed) {
-        vertices = readLZOCompressed<float_t>(*is, expectedSizeVertices).first;
+    if (version >= 45) {
+
+        bool lzoCompressed = expectedSizeVertices >= 1024;
+        if (useCompression) {
+            lzoCompressed = readBytes<bool>(*is);
+        }
+        if (lzoCompressed) {
+            vertices = readLZOCompressed<float_t>(*is, expectedSizeVertices).first;
+        }
+        else {
+            for (auto i = 0; i < expectedSizeVertices / 4; i++) {
+                vertices.push_back(readBytes<float_t>(*is));
+            }
+        }
     }
     else {
-        for (auto i = 0; i < expectedSizeVertices / 4; i++) {
-            vertices.push_back(readBytes<float_t>(*is));
+        auto vertData = readCompressedLZOLZSS(*is, expectedSizeVertices, useLzo);
+
+        union {
+            float f;
+            uint8_t b[4];
+        } b2f;
+
+        for (size_t i = 0; i < vertData.size(); i+=4)
+        {
+            b2f.b[0] = vertData[i];
+            b2f.b[1] = vertData[i+1];
+            b2f.b[2] = vertData[i+2];
+            b2f.b[3] = vertData[i+3];
+            vertices.push_back(b2f.f);
         }
     }
 
@@ -876,7 +907,12 @@ UVSet grad_aff::Odol::readUVSet() {
         return uvSet;
     }
     else {
-        uvSet.uvData = readCompressed(*is, (size_t)uvSet.nVertices * (version >= 45 ? 4 : 8), useCompression);
+        if (version >= 45) {
+            uvSet.uvData = readCompressed(*is, (size_t)uvSet.nVertices * (version >= 45 ? 4 : 8), useCompression);
+        }
+        else {
+            uvSet.uvData = readCompressedLZOLZSS(*is, (size_t)uvSet.nVertices * (version >= 45 ? 4 : 8), useCompression);
+        }
     }
     return uvSet;
 }

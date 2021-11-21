@@ -151,6 +151,18 @@ template std::pair<std::vector<uint8_t>, size_t> grad_aff::readLZOCompressed(std
 template std::pair<std::vector<uint16_t>, size_t> grad_aff::readLZOCompressed(std::istream& is, size_t expectedSize);
 template std::pair<std::vector<uint32_t>, size_t> grad_aff::readLZOCompressed(std::istream& is, size_t expectedSize);
 
+std::vector<uint8_t> grad_aff::readCompressedLZOLZSS(std::istream& is, size_t expectedSize, bool useLzo) {
+    if (expectedSize == 0)
+        return {};
+
+    if (useLzo) {
+        return readLZOCompressed<uint8_t>(is, expectedSize).first;
+    }
+    if (expectedSize < 1024) {
+        return readBytes(is, expectedSize);
+    }
+    return readLzssBlock(is, expectedSize);
+}
 
 std::vector<uint8_t> grad_aff::readCompressed(std::istream& is, size_t expectedSize, bool useCompressionFlag) {
     if (expectedSize == 0)
@@ -187,6 +199,29 @@ std::vector<T> grad_aff::readCompressedArray(std::istream& is, size_t expectedSi
 template std::vector<uint32_t> grad_aff::readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag);
 template std::vector<uint16_t> grad_aff::readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag);
 template std::vector<float_t> grad_aff::readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag);
+
+template<typename T>
+std::vector<T> grad_aff::readCompressedArrayOld(std::istream& is, size_t expectedSize, bool useCompressionFlag) {
+
+    if (expectedSize == 0)
+        return {};
+    auto n = readBytes<uint32_t>(is);
+
+    auto uncomp = readCompressedLZOLZSS(is, n * expectedSize, useCompressionFlag);
+    std::vector<T> retVec;
+    retVec.reserve(sizeof(T) * expectedSize);
+
+    for (size_t i = 0; i < uncomp.size(); i += 4) {
+        T f;
+        memcpy(&f, &uncomp.data()[i], sizeof(T));
+        retVec.push_back(f);
+    }
+    return retVec;
+}
+
+template std::vector<uint32_t> grad_aff::readCompressedArrayOld(std::istream& is, size_t expectedSize, bool useCompressionFlag);
+template std::vector<uint16_t> grad_aff::readCompressedArrayOld(std::istream& is, size_t expectedSize, bool useCompressionFlag);
+template std::vector<float_t> grad_aff::readCompressedArrayOld(std::istream& is, size_t expectedSize, bool useCompressionFlag);
 
 template<typename T>
 std::vector<T> grad_aff::readCompressedArray(std::istream& is, size_t expectedSize, bool useCompressionFlag, size_t arrSize) {
@@ -226,6 +261,15 @@ std::vector<T> grad_aff::readCompressedFillArray(std::istream& is, bool useCompr
 }
 
 template std::vector<uint32_t> grad_aff::readCompressedFillArray(std::istream& is, bool useCompressionFlag);
+
+std::vector<uint8_t> grad_aff::readLzssBlock(std::istream& is, size_t expectedSize) {
+    if (expectedSize < 1024) {
+        return readBytes(is, expectedSize);
+    }
+    std::vector<uint8_t> result(expectedSize);
+    readLzssSized(is, result, expectedSize, false);
+    return result;
+}
 
 /*
     Write
@@ -331,6 +375,7 @@ size_t grad_aff::readLzssFile(std::istream& is, std::vector<uint8_t>& out)
     }
 }
 
+
 size_t grad_aff::readLzss(std::vector<uint8_t> in, std::vector<uint8_t>& out)
 {
     auto inSize = in.size();
@@ -396,4 +441,87 @@ size_t grad_aff::readLzss(std::vector<uint8_t> in, std::vector<uint8_t>& out)
     else {
         return -1;
     }
+}
+
+size_t grad_aff::readLzssSized(std::istream& is, std::vector<uint8_t>& out, size_t expectedSize, bool useSignedChecksum)
+{
+    std::vector<uint8_t> arr(4113);
+    out.resize(expectedSize);
+    if (expectedSize <= 0u)
+    {
+        return 0u;
+    }
+    size_t position = is.tellg();
+    size_t num = expectedSize;
+    int num2 = 0;
+    int num3 = 0;
+    for (int i = 0; i < 4078; i++)
+    {
+        arr[i] = ' ';
+    }
+    int num4 = 4078;
+    int num5 = 0;
+    while (num > 0u)
+    {
+        if (((num5 >>= 1) & 256) == 0)
+        {
+            int num6 = readBytes<uint8_t>(is);
+            num5 = (num6 | 65280);
+        }
+        if ((num5 & 1) != 0)
+        {
+            int num6 = readBytes<uint8_t>(is);
+            if (useSignedChecksum)
+            {
+                num3 += (int)((int8_t)num6);
+            }
+            else
+            {
+                num3 += (int)((uint8_t)num6);
+            }
+            out[num2++] = (uint8_t)num6;
+            num -= 1u;
+            arr[num4] = (char)num6;
+            num4++;
+            num4 &= 4095;
+        }
+        else
+        {
+            int i = readBytes<uint8_t>(is);
+            int num7 = readBytes<uint8_t>(is);
+            i |= (num7 & 240) << 4;
+            num7 &= 15;
+            num7 += 2;
+            int j = num4 - i;
+            int num8 = num7 + j;
+            if ((long)(num7 + 1) > (long)((size_t)num))
+            {
+                throw new std::exception("LZSS overflow");
+            }
+            while (j <= num8)
+            {
+                int num6 = (int)((uint8_t)arr[j & 4095]);
+                if (useSignedChecksum)
+                {
+                    num3 += (int)((int8_t)num6);
+                }
+                else
+                {
+                    num3 += (int)((uint8_t)num6);
+                }
+                out[num2++] = (uint8_t)num6;
+                num -= 1u;
+                arr[num4] = (char)num6;
+                num4++;
+                num4 &= 4095;
+                j++;
+            }
+        }
+    }
+    std::vector<uint8_t> arr2 = readBytes(is, 4);
+    //if (BitConverter.ToInt32(array2, 0) != num3)
+    //{
+    //    //throw new ArgumentException("Checksum mismatch");
+    //}
+    return (size_t)is.tellg() - position;
 }
